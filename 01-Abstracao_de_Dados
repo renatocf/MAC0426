@@ -1,0 +1,93 @@
+O que é abstração de dados?
+---------------------------
+
+* Abstração de dados é um processo mental que seleciona algumas
+  propriedades de um conjunto de objetos e exclui outras irrelevantes 
+  em um dado contexto.
+* Logo quando iniciamos a computação, aprendemos diferentes tipos
+  de dados. Inteiro, ponto flutuante, etc, coloca os dados em vários
+  tipos de conjuntos. A teoria de conjuntos já é um tipo de abstração:
+  para podermos colocar alguém em um conjunto, temos que descrever 
+  as propriedades de umelemento que está naquele conjunto.
+* Fazer modelagem é restringir o mundo real para que ele caiba nas 
+  propriedades do modelo (o "óculos") e encaixá-lo nas propriedades 
+  do modelo. Este conceito é MATERIALISTA - partimos do mundo REAL
+  para uma abstração, sempre IMPERFEITA, mas suficiente para que 
+  possamos realizar o que precisemos.
+
+Principais Abstrações
+---------------------
+
+* Classificação
+    - Inicialmente, precisamos 'classificar' o mundo.
+    - Classificar é "Fazer um particionamento (disjunto) do minimundo
+      de acordocom o grau de similaridade";
+    - Esta é o primeiro tipo de abstração que faremos;
+    
+                            .--------------.
+                            | *     *|     |
+                            | *      | +   |
+                            |--------' .---|
+                            |   +   +  | o |
+                            |          |o  |
+                            '--------------'
+    
+    - Criar a orientação a objetos é, na realidade, um corolário da
+      abstração de objetos por classificação - que é mais geral e 
+      está em vários modelos;
+    - Em seguida, devemos identificar as classes de abstração:
+    
+                            .--------------. 
+                          A | *     *|     | B
+                            | *      | +   | 
+                            |--------' .---| 
+                            |   +   +  | o | C
+                            |          |o  | 
+                            '--------------' 
+    
+    - Dado uma classe, deveremos enumerar seus elementos:
+                                             
+                            .--------------. 
+                          A | *1   3*|     | B
+                            | *2     | +3  | 
+                            |--------' .---| 
+                            |  1+  2+  |1o | C
+                            |          |o2 | 
+                            '--------------' 
+        
+        - Às vezes, precisamos de mais um identificador para que
+          possamos identificar UNIVOCAMENTE cada elemento. Ex:
+          - Uma criança, quando nasce, precisa de data, hora e 
+            nome da mãe. Mesmo com gêmeos, eles terão horas de 
+            nascimento diferentes;
+          - Para identificar qual o curso de um aluno da USP, 
+            são necessários dois dados: o número USP (para o 
+            aluno) e o código do curso. Assim, é possível 
+            identificar o aluno até mesmo em que momento.
+          - Para identificarmos professores estrangeiros e 
+            brasileiros univocamente para cada elemento, 
+            poderíamos TIPIFICAR o ID - todos os IDs seriam
+            ou do tipo RG, ou do tipo RNE.
+        - Temos 3 técnicas, então, de especializar: IDs únicos, 
+          IDs com duas informações, e IDs tipificados.
+        - Para criarmos IDs DIFERENTES para classes diferentes,
+          elas devem ser DISJUNTAS e TOTAL. Ex:
+         
+        generalização   
+          ^ |
+          | |       Pessoa
+          | |         || _____ Critério de Especialização
+          | |         /\            * disjunta/sobreponível
+          | |        /  \           * total/parcial
+          | |   Física  Jurídica
+            ^
+          especialização
+        
+        - Classificações:
+            - Classe:    Conjunto de objetos descrito pelo mesmo 
+                         conjunto de propriedades.
+            - Tipo:      Conjunto de propriedades que descreve 
+                         uma classe.
+            - Instância: Elemento de uma classe que respeita as
+                         propriedades.
+* 

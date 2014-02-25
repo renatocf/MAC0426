@@ -1,0 +1,206 @@
+Slides: www.ime.usp.br/~jef/bdXX.pdf
+    
+* As empresas precisam, de alguma forma, colocar vários dados e 
+  usá-los de boa forma. Para isso, cripou-se os Sistemas Gerenciadores
+  de Banco de Dados (SGBD).
+* Antes, houve vários programas que precisavam usar dados acessando
+  arquivos. Cada programa tinha, na realidade, que manejar o disco
+  para poder fazer estes usos.
+* Estes programas tinham que SER MUDADOS, caso houvesse alguma 
+  mudança nos dados (mesmo simples, como trocar o diretório).
+                .-------.
+                | .---. |               .-------.
+                | |   | |               |       |
+                | '---' | ============> |       |
+                '-------'               |       :
+                  :___:   <============ |       |
+                 /     \                '-------'
+                /_______\
+
+* Para evitar estes problemas, criou-se os Sistemas Gerenciadores
+  de Bancos de Dados (SGDB), que permite ser uma INTERFACE para 
+  acesso a disco, de maneira que ela encapsulasse o acesso a dados.
+                .-------.     .---.
+                | .---. |     |   |     .-------.
+                | |   | | ====| S |===> |       |
+                | '---' |     | G |     |       |
+                '-------'     | B |     |       :
+                  :___:   <===| D |==== |       |
+                 /     \      |   |     '-------'
+                /_______\     '---'
+
+* Hoje, eles se tornaram ainda mais complexos, com a inserção de 
+  modelos: os METADADOS:
+                        
+                              .-----------.
+                              | Metadados |
+                              '-----------'
+                                    ^
+                    .-------.     .---.
+                    | .---. |     |   |     .-------.
+                    | |   | | ====| S |===> |       |
+                    | '---' |     | G |     | Dados |
+                    '-------'     | B |     |       :
+                      :___:   <===| D |==== |       |
+                     /     \      |   |     '-------'
+                    /_______\     '---'
+           
+        .---------------------------.---------------------------.
+        |          USAR BD          |       NÃO USAR BD         |
+        |===========================|===========================|
+        | Controle redundância      | Dados e aplicações        |
+        |                           | simples e estáveis        |
+        |---------------------------|---------------------------|
+        | Controle consistência e   | Requisitos de tempo-real  |
+        | integridade               | não puderem ser atendidos |
+        |---------------------------|---------------------------|
+        | Acesso múltiplos usuários |                           |
+        |---------------------------|---------------------------|
+        | Compartilhamento de dados |                           |
+        |---------------------------|---------------------------|
+        | Controle acesso e         |                           |
+        | segurança                 |                           |
+        |---------------------------|---------------------------|
+        | Controle de recuperação   |                           |
+        | e restauração             |                           |
+        |---------------------------|---------------------------|
+        | Consultas edicientes      |                           |
+        '---------------------------'---------------------------'
+
+* Em geral, o acesso adisco feito pelos SGDB demoram milissegundos,
+  e não nanossegundos como o acesso a memória comum. Por isso, 
+  SGDBs não devem ser usados se for necessário esta velocidade.
+  Porém, quantidades MUITO grandes podem precisar de disco,
+  porque a quantidade de memória HD é bem maior que a RAM.
+* Arquitetura 'Three-schema':
+    - Apoio a múltiplas visões de dados
+    - Capaciddade de abstração de dados
+    - Independência física de dados
+                            
+             .--------------------------------------.
+             |           Usuários Finais            |
+             |--------------------------------------|            
+             |  Visão externa 1 ... Visão externa n |
+             |          /\              /\          | 
+             |----------||--------------||----------|            
+             |          \/              \/          | 
+             |          Esquema Conceitual          | 
+             |                  /\                  |
+             |------------------||------------------|            
+             |                  \/                  |
+             |            Esquema interno           |
+             |            /\            /\          | 
+             |            ||            ||          | 
+             |            \/            \/          | 
+             |            BD1   ...    BDn          | 
+             '--------------------------------------'
+                            
+                                Minimundo
+                                    ||
+                                    \/
+                     Coleta e análise de requisitos
+                        /                      \
+                       /                        \
+            requisitos funcionais ......  requisitos de bc
+                     \/                |         \/
+              Análise funcional        |  projeto conceitual
+                     ||                |         \/
+                     ||                |  projeto lógico
+                     ||                |         \/
+        projeto das funcionalidades <--|- esquema lógico
+                     ||                |         \/
+                     ||                '> projeto físico
+                     \/                          \/
+             Implementação das <---------------- BD
+                 transações                    
+                     \/
+                 Aplicações
+
+* Modelo de Dados
+  Os modelos de dados se negam em conceitos, e às vezes retormam 
+  os que havia nos modelos mais antigos (como Classes Literárias).
+    - Redes         } Metadados não eram importantes ainda.
+    - Hierárquivo   } Eram sistemas de arquivos melhorados.
+    - Relacional        } Tinha Metadados, mas ainda não era semântico
+    - Entidade-Relacionamento   } 
+    - ER-Estendido              } A Semântica começou a ser cada
+    - Objeto                    } vez mais importante, e os modelos
+    - Objeto-Relacional         } conceituais crescem mais e mais.
+
+* O modelo Relacional sobrevive até hoje por dois principais motivos:
+    - Primeiro, ele é quase tão rápido quanto possível. Por não
+      ter um grau de complexidade muito grande, os modelos dos 
+      últimos tipos são menos eficientes;
+    - Também, os dados em geral são simples, e têm estruturas simples.
+      Por isso, os relacionais são importantes.
+
+* Modelo Conceitual:
+    Abstração dos dados - independe dos BDs e SGDBs e pode ser 
+    tão abstrato quanto possível (Ex: modelo entidade-relacional)
+* Modelo Lógico:
+    Depende dos BDs. Envolve as Estruturas de Dados, que são 
+    várias representações e as operações relacionadas a elas.
+    (Ex: Relacional, Objetos).
+        Ex: Uma lista de alunos é uma ED que representa bem a 
+                o conceito real (uma lista com alunos).
+    O Modelo lógico apóia:
+        - Especificação dos modelos (DDL)
+        - A maniputação dos dados (DML)
+* Modelo Físico
+    Indexação e estrutura de arquivos. Transações e concorrência,
+    otimizações, etc. A parte real de colocar os dados.
+
+* Arquitetura do SGDB
+
+                        Transações externas
+                          --..  ||  ..--
+                            ||  ||  ||
+                         .---------------.
+                         |  Geranciador  | Recebe todas as operações
+                         | de transações | sobre o banco
+                         '---------------'
+                                 ↕↕ 
+                         .---------------.
+                         |  Escalonador  | Otimiza e ordena as 
+                         '---------------' solicitações sobre os dados
+                                 ↕↕ 
+                         .----------------.
+                         |  Gerenciador   | Recupera as falhas do SGDB,
+                         | de Recuperação | para garantir que as
+                         '----------------' transações sejam atendidas
+         .-------.               ↕↕         e não haja inconsistência     
+         |  BD   |         .-------------.
+         |-------|         | Gerenciador |            .-------.
+         | Index | <-----> |  de Memória | <--------> | Cache |
+         |-------|         '-------------'            '-------'
+         |  Log  |     Controla como serão salvos      Memória
+         '-------'       os dados na memória.          Primária
+     Memória de Disco                           (Dados sempre precisam 
+                                                    passar por aqui)
+
+* Projeto Conceitual: ação que produz o esquema conceitual de dados.
+* Projeto Lógico:     ação que produz o esquema lógico de dados.
+* Projeto Físico:     ação que produz o esquema físico do lógico.
+
+Ex: Projeto conceitual de aluno
+          
+  Modelo         | Modelo                                     | Modelo
+  Conceitual     | Lógico                                     | Físico
+ ================|============================================|=========
+                 |                                            | 
+  Aluno          |           / Aluno                          | 
+  |              |           | .--------.------.------.-----. | .----.
+  |-> Nome       | Estrutura | |  Nome  | NUSP | Nasc.| ... | | |    |
+  |-> NUSP       |    de     | |--------|------|------|-----| | |    |
+  |-> Data nasc. |   Dados   | | Renato | x123 |      |     | | |    |
+  |-> Endereço   |           | |--------|------|------|-----| | '----'
+  ...            |           |              ...               |   BD
+                 |           \                                |         
+                 |                                            | (SGDB)
+                 |           / CREATE TABLE Aluno {           |         
+                 | Linguagem |    NOME char 40                |         
+                 |           |    NUSP long int               |         
+                 |           \    ...                         |         
+                 |                                            |         
+    
+Tarefa: Fazer exercícios dos slides

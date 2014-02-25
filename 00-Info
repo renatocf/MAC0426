@@ -1,0 +1,11 @@
+Prova P1 : 23/04/2014
+Prova P2 : 04/06/2014
+Sub      : 11/06/2014
+
+MP = (2*P1 + 3*P2)/5
+
+Sub substituirá uma das notas da P1 ou P2.
+Nota do Projeto (NT) contribuirá com 20% na média se MP > 5.0
+Portanto:
+
+MF = 0.8* MP + 0.2 NT

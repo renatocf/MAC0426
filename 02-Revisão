@@ -1,0 +1,26 @@
+X Mandamentos de Projetos de BC
+
+1º Adorarás asabstrações de dados sobre todas as coisas.
+
+2º Não projetarás Banco de Dados baseado no modelo físico.
+                
+            pensamento 
+               .--.
+               '--' modelo    /    mini-mundo
+          .....()()........../....--------------. } 
+          |    /()\ .       /    | *     *      | } 
+          |   / /\ \ . modelagem |     o    +   | } 
+          |    /  \   .   /      | +         o  | } Dados
+          |            . /       |   *   +      | } 
+          |             /        |        o     | } 
+   Modelo de Dados     / ........'--------------' } 
+         \/           /
+  Abstração de Dados /__ Projeto Conceitual
+         \/                     \/
+    Classificação       Projeto Lógico-Físico
+         \/
+     Particiona  ---. Na aula passada, vimos o primeiro passo 
+         \/         | necessário para uma modelagem: criar um 
+       Classes      | PARTICIONAMENTO do mini-mundo, para que 
+         \/         | ele caiba dentro do nosso modelo. Temos
+    Propriedades ---' uma separação por PROPRIEDADES.

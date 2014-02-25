@@ -1,0 +1,76 @@
+Existem duas grandes vertentes em Bancos de Dados: fazer um projeto
+físico/conceitual (modelar o banco) e a implementação (implementar o
+banco). E as duas são bem diferentes. Sempre é importante CONCEBER O
+CONCEITO DO DADO.
+
+"Os dex mandamentos"
+
+01. Adorarás as abstrações de dados sobre todas as coisas;
+    Modelagem BD
+        
+     pensamento
+       .--.
+       '--' modelo    /    mini-mundo
+    . -()()........../....--------------. } 
+    |  /()\ .       /    | *     *      | } 
+    | / /\ \ . modelagem |     o    +   | } 
+    |  /  \   .   /      | +         o  | } Dados
+    |          . /       |   *   +      | } 
+    |           /        |        o     | } 
+    |          / ........'--------------' } 
+    |         /
+    |         '---> Projeto Conceitual de BD
+    |
+    '--> MODELO { Hierárquico
+                { Redes
+                { Relacional
+                { Orientado a objetos
+                { Entidade relacional
+                { Modelo de abstrações
+    
+    O modelo é o 'óculos' que a pessoa utiliza para criar o modelo
+    (fazer a modelagem) a partir dos dados (o mundo físico).
+    
+    É muito importante, sempre, elaborar um projeto de banco de dados,
+    porque os dados sempre são carregados entre aplicações, e um 
+    projeto ruim fará com que os problemas sejam levados com o tempo.
+
+02. Não projetará Bancos de Dados baseado no modelo físico;
+    Não se basear somente na realidade, mas sim criar modelos.
+
+03. Projetarás primeiramente as classes "naturais"; (não cairás na
+    tentação de classes complexas originárias de relacionamentos
+    e muito menos confundirás atributos com classes e, ainda, 
+    relacionamentos com classes);
+    Será o primeiro modo.
+
+04 a 10. Serão vistos mais a frente...
+
+========================================================================
+Histórico do Banco de Dados
+
+    * pré-SGBDs: Estruturas de acesso atendidas pelo SO;
+62: * TOTAL (Rede Limitado);
+66: * IMS (Hierárquico);
+70: * IDMS (Rede); 
+74: * Modelo Relacional;
+    * Sistema R (Relacional), DATACOM, ADABAS (Modelo Relacional);
+78: * Modelo E-R;
+    * INGRES, ORACLE (Relacionais)
+82: * DB2 (Relacional);
+86: * Protótipos { Adaplex, Exodus, SDM;
+90: * Onto, O2, Postgres
+94: * Modelo Orientado a Objetos, OR
+98: * SGBDs 'Universais'
+    * SGDBs Naturais e Hab. XML
+02: 
+
+HISTÓRICO
+* Teoria de banco de dados
+    - Resultou na FORMALIZAÇÃO do modelo relacional
+* SQL
+    - Linguagem DECLARATIVA de programação
+
+Tarefa
+------
+Ler capítulos 1, 2 e 3 da apostila do curso.
