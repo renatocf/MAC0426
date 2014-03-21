@@ -1,0 +1,235 @@
+OPERADORES RELACIONAIS
+=======================
+
+* Operador SELECT - σ
+    * Utilizada para selecionar, segundo alguma condição, tuplas
+      de uma relação.
+    * Data uma relação A, criamos uma nova relação B que tem ALGUMAS
+      tuplas de B, restritas à algumas condições. Vale, sempre, que 
+      B ⊆ A.
+    * Exemplos:
+        * Selecionar os empregados que trabalham para o departamento 4:
+            σ_NDEP=4 (EMPREGADO)
+        * Selecionar os empregados que tenham salário maior que 3000:
+            σ_SALÁRIO>3000 (EMPREGADO)
+    * Para especificar as confições, podemos utilizar:
+        * Vamor Constatne;
+        * Nome do atributo;
+        * Os operadores relacionais: {=,<,≤,>,≥,≠};
+        * Os operadores lógicos: {AND,OR,NOT}.
+    * Caracterpisticas e Propriedades do SELECT:
+        * É um operador unário. Selecionad tuplas de somente uma
+          relação.
+        * Grau da relação resultante é o mesmo da relação original.
+        * É comutativa: pode-re trocar SELECT em cascata pela 
+          conjuntiva AND.
+
+* Operador PROJECT - π
+    * Enquanto o operador SELECT seleciona tuplas de uma relação, o
+      operador PROJECT seleciona colunos de uma relação.
+    
+    * Consulta:
+        π_SNOME,PNOME,SALÁRIO (EMPREGADO)
+    
+    * O operador PROJECT remove quaisquer tuplas duplicadas 
+      da relação resultante - isso é necessário para que mantenhamos
+      a INTEGRIDADE das relações, em que não há repetição de tuplas.
+    
+    * Características e propriedades do operador PROJECT:
+        * O número de tuplas resultantes será sempre igual ou menor
+          que a quantidade de tuplas original (tuplas são removidas
+          quando há repetições, como no caso acima.
+        * Se <lista1> ⊆ <lista2> π_<lista1>(π_<lista2> A) == π_<lista1>(A)
+    
+    * É possível combinar os operadores σ e π em uma única linha,
+      de forma a gerar uma resposta:
+                π_PNOME,SNOME,SALARIO(σ_NDEP=5(EMPREGADO))
+    
+    * Podemos criar relações INTERMEDIÁRIAS para reaproveitarmos 
+      algumas seleções/projeções e aumentar a legibilidade:
+            DEP_EMPREGADO ← σ_NDEP=5(EMPREGADO)
+            RESPOSTA      ← π_PNOME,SNOME,SALARIO(DEP_EMPREGADO)
+   
+    * Quando fazemos umaalteração, podemos RENOMER atributos: 
+            RESPOSTA_NOME,SOBRENOME,SALARIO 
+                ← π_PNOME,SNOME,SALARIO(DEP_EMPREGADO)
+    
+* Operadores deconjunto (U,∩,-,x)
+    * Quando olhamos para as relações, podemos considerá-las como
+      CONJUNTOS DE TUPLAS.
+    * Operadores:
+        * R U S: Todas as tuplas de R e S, sem repetições.
+                 Porém, R e S devem ser COMPATÍVEIS (mesmo grau == 
+                 número atributos E mesmo domínio de atributos);
+        * R ∩ S: Todas as tuplas comuns à R e S;
+        * R - S: Todas as tuplas de R que não estão em S;
+        * R x S: Faz produto cartesiano de R e S, como conjuntos,
+                 gerando PARES de tupla de R concatenada com tuplas
+                 de S, num total de combinações 2 a 2 entre os 
+                 elementos de R e S.
+    * Os operadores U, ∩ e - são de uso simples;
+    * O operador de x (produto cartesiano) é bem mais complexo.
+      Esta opeação NÃO tem semântica. Porém, usando SELEÇÕE e
+      PROJEÇÕES, conseguimos tirar significados. Ex:
+        
+        Criar uma relação de empregados e seus dependentes.
+        σ_NSS=NSSEMP(EMPREGADOS x DEPENDENTES)
+
+* Operador JOIN
+    * Como a ação feita anteriormente é muito comum (fazer um 
+      produto cartesiano e, depois, selecionar alguns dos elementos),
+      criou-se o operador JOIN (um açúcar sintático).
+    * Ex:
+        DEP_EMP ←  DEPARTAMENTO x EMPREGADO
+        DEP_GER ← σ_GERNSS=NSS(DEP_EMP)
+        RESULT  ← π_PNOME(DEP_GER)
+            
+        DEP_EMP ←  DEPARTAMENTO ⋈ _GERNSS=NSS EMPREGADO
+        RESULT  ← π_PNOME(DEP_GER)
+    * Ex:
+        Recuperar, para cada empregado do sexo feminino, uma lista
+        de nomes de seus dependentes.
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        EMP       ←  EMP_NOMES X DEPENDENTE
+        DEP_ATUAL ←  σ_NSS=ENSS(EMP_DEP)
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        DEP_ATUAL ←  EMP_NOMES ⋈ _NSS=ENSS DEPENDENTE
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+
+* Operador EQUIJOIN
+    * Como é muito comum encontrar o JOIN e usar operações de
+      igualdade, foi criado o EQUIJOIN. Ele simplesmente faz um
+      JOIN que tem como condições uma igualdade.
+    * Ex:
+        Recuperar, para cada empregado do sexo feminino, uma lista
+        de nomes de seus dependentes.
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        DEP_ATUAL ←  EMP_NOMES ⋈ _NSS=ENSS DEPENDENTE
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        DEP_ATUAL ←  EMP_NOMES EQUIJOIN_NSS,ENSS DEPENDENTE
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+
+* Operador NATURAL JOIN *
+    * No caso do EQUIJOIN, temos uma REPETIÇÃO de colunas - pois
+      a condição é que os atributos fossem iguais. O NATURAL JOIN
+      elimina estas colunas.
+    * Ex:
+        Recuperar, para cada empregado do sexo feminino, uma lista
+        de nomes de seus dependentes.
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        DEP_ATUAL ←  EMP_NOMES ⋈ _NSS=ENSS DEPENDENTE
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+        
+        DEP_FEM   ←  σ_SEXO='F'(EMPREGADO)
+        EMP_NOMES ←  π_PNOME,SNOME,NSS(EMP_FEM)
+        DEP_ATUAL ←  EMP_NOMES *_NSS,ENSS DEPENDENTE
+        RESULT    ←  π_PNOME,SNOME,NOMEDEPENDENTE(DEP_ATUAL)
+    
+    * O NATURAL JOIN é melhor ainda: quando não especificamos nenhum
+      atributo, ele faz o JOIN unindo todos os atributos que sejam 
+      iguais entre duas relações. Se, ao projetarmos o banco, 
+      coloquemos nomes IGUAIS para relações, então o joinserá
+      feito automaticamente.
+
+* Operador DIVISION
+    * A operação DIVISION serve para pegar um exemplo específico:
+        Imaginemos que temos o empregado SMITH, que trabalha 
+        nos projetos 1 e 2, e os outros empregados, que não 
+        sejam o SMITH. Como pegar os empregados que trabalham em
+        TANTOS DEPARTAMENTOS quanto Smith?
+        
+        NSS_PNRO     SMITH_PNO  NSS_DESEJADO 
+        NSSEMP PNRO  PNO        NSS
+        1234    1     1         1234
+        1234    2     2         3456
+        2345    1
+        2345    2
+        3456    1
+        2345    3
+    
+        1234: Funciona, pois ele trabalha em PELO MENOS 1,2
+        2345: Funciona, pois trabalha em PELO MENOS 1,2
+        3456: Desqualificado, pois não trabalha em 1
+        O division retorna APENAS o atributo, não o usado na comparação,
+    
+    * A operação DIVISION pode ser expressa pelo conjunto de 
+      relações π,σ e -:
+        * Primeiro, pegamos um atributo 'x' do conjunto A:
+            π_x(A)
+        * Depois, fazemos um produto cartesiano com B, para obter
+          os pares A e B associados (B é o nosso atributo que 
+          será usado como critério para fazer a seleção):
+            π_x(A) X B
+        * Deles, tiramos todos que não tiverem a relação de A. Isso
+          FAZ SENTIDO porque A tinha duas colunas: 'x' e os atributos
+          descritos em B:
+            (π_x(A) X B) - A
+        * Assim, obtemos todos os DESQUALIFICADOS: pessoas de A que
+          têm atributos DIFERENTES dos listados em B.
+        * Pegamos, então, nosso atributo de interesse x dos
+          desqualificados:
+            π_x((π_x(A) X B) - A)
+        * Enfim, tiramos os 'x' dos desqualificados da massa de 'x'
+          em A:
+            π_x(A) - π_x((π_x(A) X B) - A)
+        * Esse é o equivalente a A / B
+
+* Funções de Agregação (ξ)
+    * As funções de agregação JUNTAM tuplas, obtendo algum tipo de
+      estatísticaso
+
+* Outer joins
+    * Quando fazemos um NATURAL JOIN, em geral TIRAMOS os valores
+      que não forem iguais (só mantemos o que tiver match).
+    * Mas e se não quisermos ELIMINAR tuplas, mas sim manter os 
+      valores SEM MATCH com 'null'? Para isso, usamos o OUTER JOIN.
+    * O OUTER JOIN pode manter um dos dois lados da igualdade, 
+      de modo a colocar NULL no lado que não tiver nenhum match.
+    * Os símbolos usados para o OUTER JOIN à esquerda e à direira são;
+        =⋈  (outer join à esquerda) ⋈ = (outer join à direita)
+    * Também podemos fazer todas as combinações possíveis, usando
+          o FULL OUTER JOIN (que é a junção de ambos)
+    * Ex:
+        ENTIDADE_1    ENTIDADE_2  
+        .---.---.     .---.---.   
+        | A | 1 |     | A | 5 |   
+        | B | 2 |     | D | 4 |   
+        | C | 3 |     | F | 3 |   
+        '---'---'     '---'---'   
+                                  
+        Outer join:                                     
+             .---.---.------.------.                         
+         ⋈   | A | 1 | A    | 5    |                         
+             '---'---'------'------'                         
+        Left Outer join:                                     
+             .---.---.------.------.                         
+             | A | 1 | A    | 5    |                         
+        =⋈   | B | 2 | null | null |                         
+             | C | 3 | null | null |                         
+             '---'---'------'------'                         
+        Right Outer join:                                     
+             .------.------.---.---.                         
+             | A    | 1    | A | 5 |                         
+         ⋈ = | null | null | D | 4 |                         
+             | null | null | F | 3 |
+             '------'------'---'---'
+        Full Outer join:                                     
+             .------.------.------.------.
+             | A    | 1    | A    | 5    |
+             | B    | 2    | null | null |                         
+        =⋈ = | C    | 3    | null | null |                         
+             | null | null | D    | 4    |
+             | null | null | F    | 3    |
+             '------'------'------'------'
