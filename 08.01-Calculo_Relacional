@@ -1,0 +1,164 @@
+CÁLCULO RELACIONAL DE TUPLAS
+==============================
+
+* Consiste de uma outra forma de realizar consultas à tuplas.
+* A AR é procedimental, o CRT é declarativa.
+    - O CRT permite descrever um cojunto de respostas sem
+      explicitar como elasserão computadas
+* O CRT influeciou o SQL.
+
+* Introdução:
+    - A consulta em CRT tem a forma: { t | P(t) }
+    - O símbolo acima representa o conjunto de todas as tuplas t
+      tal que o predicado P é verdadeiro para t.
+    - Exemplo:
+        Todos os empregados cujo salário é acima de 50 mil:
+        { t | EMPREGADO(t) AND t.SALARIO > 5000 }
+              ^^^^^^^^^^^^     ^^^^^^^^^- atributo salário maior
+                |                         que esta constante
+                '- t deve pertencer à relação empregado
+    
+    - Para recuperar apenas alguns atribotas, temos:
+        { t.SALARIO, t.PNOME | EMPREGADO(t) AND t.SALARIO > 5000 }
+    
+* Expressões e fórimlas:
+    { t1, t2, ..., tn | P(t1, t2, ..., tn) }
+     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+                             Fórmula   , R(t_i)
+                                |     /  
+                              Átomos  -- "t_i.A op t_i.B" (op = operação)
+                              (T/F)   \ 
+                                |      ` "t_1.A op c" ou 
+                                |        "c op t_1.B"
+                            Conectivos
+                        { AND OR NOT → ↔ }
+
+* Uma átomo é uma valor que assume TRUE ou FALSE;
+* Uma fármula é um conjunto de átomos conectados por AND, OR, NOT, 
+  → ou ↔ .
+* A fóruma também pode ter 3 quantificadores (∀ ou ∃).
+* Definição geral e recursiva de expressões e fórmulas:
+    * Todo átomo é uma fórmula;
+    * Se F1 e F2 são fórmulas, F1 AND F2, F1 OR F2, NOT(F1) 
+      são fórmulas;
+    * Se F é fórmula, então (∃t)(F(t)) é uma fórmula;
+    * Se F é fórmula, então (∀t)(F(t)) é uma fórmula;
+
+* Exemplo de Projeção:
+  Recupere o nome e o endereço de todos os empregados:
+    - Em Álgebra Relacional:
+        π_SNOME,PNOME,SALÁRIO(EMPREGADO)
+    - Em CRT:
+        { t.SNOME, t.PNOME, t.SALÁRIO | EMPREGADO(t) }
+
+* Exemplo de Seleção:
+  Recupere todos os empregados do sexo feminino:
+    - Em Álgebra Relacional:
+        σ_SEXO='F'(EMPREGADO)
+    - Em CRT:
+        { t | EMPREGADO(t) AND t.SEXO='F' }
+
+* Exemplo de Join
+  Recupere o nome e o endereço de todos os empregados que trabalham
+  para o departamento pesquisa.
+    - Em Álgebra Relacional:
+        PESQ    ← σ_DNOME='pesquisa'(DEPARTAMENTO)
+        empPesq ← EMPREGADO ⋈ _NDEP=DNUMERO PESQ
+        RES     ← π_PNOME,ENDERECO(empPesq)
+    
+    - Em Cálculo Relacional:
+        { e.PNOME, e.ENDERECO | EMPREGADO(e) AND 
+            (∃ d)(DEPARTAMENTO(d) AND d.DNOME='pesquisa' 
+                                  AND d.DNUMERO=e.NDEP)  }
+        
+        Notas: * Sempre, ao projetar elementos de uma tupla, 
+                 precisamos verificar qual o tipo da tupla.
+               * Para tratar de uma tupla que não esteja 
+                 referenciada na seção de projeções, então 
+                 precisamos usar um quantificador EXISTENCIAL.
+
+* Exemplo de duplo JOIN (para juntar mais de 2 tabelas)
+  Para todos os projetos localizados em Houston, liste o número
+  do projeto, o número do departamento que o controla e o nome 
+  do seu gerente.
+    - Em Álgebra Relacional:
+        Houston       ← σ_PLOCALIZACAO='Houston'   (PROJETOS)
+        HoustonD      ← Houston  ⋈ _NUMDEP=DNUMERO DEPARTAMENTO
+        HoustonDepGer ← HoustonD ⋈ _GERNSS=NSS     EMPREGADO
+        Res           ← π_PNUMERO,DNUMERO,PNOME    (HoustonDepGer)
+    
+    - Em CRT:
+        { p.PNUMERO, p.NUMDEP, e.PNOME | 
+            PROJETO(p) AND EMPREGADO(e) 
+            AND p.PLOCALIZACAO='Houston'
+            AND (∃ d)(DEPARTAMENTO(d) 
+                AND d.DNUM=p.NUMDEP
+                AND d.GERNSS=e.NSS
+        )}
+    
+    - Para eliminar o existencial:
+        { p.PNUMERO, d.NUMDEP, e.PNOME | 
+            PROJETO(p) AND EMPREGADO(e) AND DEPARTAMENTO(d) 
+            AND p.PLOCALIZACAO='Houston'
+            AND d.DNUM=p.NUMDEP
+            AND d.GERNSS=e.NSS
+        }
+
+* Outro exemplo de duplo JOIN
+  Liste o nome dos empregados que trabalham em ALGUM projeto 
+  controlado pelo departamento 5:
+    - Em Álgebra Relacional:
+        projDep5 ← σ_DNUM=5 PROJETO
+        projTrab ← projDep5 ⋈ _PNUMERO=PNRO TRABALHA_EM
+        projEmpN ← projTrab ⋈ _NSSEMP=NSS   EMPREGADO
+        res      ← π_PNOME (EMPREGADO)
+    
+    - Em CRT:
+        { e.PNOME | EMPREGADO(e) 
+            AND (∃ p,t)(PROJETO(p) AND TRABALHA_EM(t)  # Escopo
+            AND p.NUMDEP=5                             # Condição
+            AND p.PNUMERO=t.PNRO AND e.NSS=t.ENSS      # Restrição
+        )}
+
+* Exemplo de União
+  Listar os nomes de projetos em que o empregado de sobrenome Smith
+  trabalhe ou que sejam controlados por algum departamento gerenciado
+  pelo empregado Smith.
+    - Solução: exercício
+      DICA: O grande segredo é usar um "OR"
+
+* Exemplo de Autorelacionamento
+  Listar o nome de cada empregado e o seu supervisor imediato.
+    - Solução: exercício
+      DICA: Join da tabelaconsifo própria
+    
+* Exemplo de Divisão
+  Liste o nome de todos os empregados que trabalham em todos os
+  projetos:
+    - Em Álgebra Relacional:
+        PROJNSS (PNRO,NSS) ← π_PNRO,NSSEMP (TRABALHA_EM)
+        PROJS   (PNO)      ← π_PNUMERO     (PROJETO)
+        EMP                ← PROJNSS / PROJS
+    
+    DICA: toda vez que tivermos 'todo', usaremos DIVISÃO na 
+          Álgebra Relacional e ∀ no Cálculo Relacional
+
+* Mais exemplos de usos de ∀:
+  Liste o nome dos empregados que não tenham dependentes:
+    { e.PNOME | EMPREGADO(e) AND 
+        (∀ d)(DEPENDENTE(d) → e.NSS <> e.NSSEMP) }
+    
+    - Pela tabela da verdade:
+        .---------------.-------------------.-----------.
+        | DEPENDENTE(d) | e.NSS <> e.NSSEMP | Resultado |
+        |---------------|-------------------|-----------|
+        |       T       |        T          |     T     |
+        |       T       |        F          |     F     |
+        |       F       |        T          |     T     |
+        |       F       |        F          |     T     |
+        '---------------'-------------------'-----------'   
+        
+        Nesse caso, estamos EXCLUINDO qualquer empregado que
+        tivesse um dependente - justamente o que desejamos.
+        Por isso usamos o operador de implicação, mas poderíamos
+        substituílo por ¬A ∨ B
