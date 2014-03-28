@@ -1,0 +1,161 @@
+* Introdução
+    - SQL - Structured Query Language
+    - Linguagem declarativa - não-procedimental
+    - Pode ser "alienativa", por este padrão declarativo
+    - Inicialmente chamada SEQUEL (Structured Encglish QUEry Language)
+    - Criada como interface entre usuários e 
+      o primeiro SGDB - SYSTEM R
+    - Atrativo: pequena quantidade de comandos
+    - Padrões: ANSI, ISO
+    - Recursos: DDL e DML
+    - Criação de cisões (views)
+    - Especificação de segurança eautorizações
+    - Mantém integridades de dados
+    - A aceitação do SQL não é devido a suas qualidades
+        - Muitos conceitos são falhos;
+        - Seria possível ter uma linguagem muito melhor e
+          mais simples;
+        - Suas reais vantagens repoucsam no Modelo Relacional.
+    - Vocabulário divergedo Modelo Relacional:
+        - Relação  → Tabela
+        - Tupla    → linha
+        - Atributo → Coluna
+
+* DDL (Data Definition Language) - Criação do Esquema
+    
+    - É uma ferramenta que, dada a definição do DOMÍNIO, já nos
+      mostra qual será o SQL necessário para criar asestruturas.
+    - CREATE DOMAIN: Utilizado para definir domínios, definindo
+      tipos e restrições aos dados. Se o domínio não for respeitado,
+      teremos erros.
+    - CREATE TABLE: Cria uma nova tabela (relação), restringindo 
+      quais os tipos.
+    - Tipos normais de dados:
+        - Int, Float, etc.
+        - BLOB: Tipo mais complexo de dado, que fica criptografado
+                pelo SGDB
+    
+    - Ex: Relação EMPREGADO
+        CREATE TABLE COMPANHIA_EMPREGADO{
+            PNOME               VARCHAR(15)     NOT NULL,
+            MNOME               CHAR,
+            SNOME               VARCHAR(15)     NOT NULL,
+            NSS                 TIPO_NSS        NOT NULL,
+            DATANASC            DATE,
+            ENDERECO            VARCHAR(30),
+            SEXO                CHAR,
+            SALARIO             DECIMAL(10,2),
+            NSSSUPER            CHAR(9),
+            NDEP TIPO_DEPNUM                    NOT NULL,
+            PRIMARY_KEY(NSS),
+            FOREIGN KEY (NSSSUPER) REFERENCES EMPREGADO(NSS),
+            FOREIGN KEY (NDEP)     REFERENCES DEPARTAMENTO(NDEP)
+        }
+    
+    - ADD - Adiciona uma nova estrutura
+    - DROP - Elimina estruturas
+    
+    - PRIMARY_KEY: Garante que as chaves NÂO TENHAM REPETIÇÕES e
+                   trata-as como identificadores para as tuplas 
+                   da relação.
+    - FOREIGN_KEY: Faz um 'binding' do atributo com outra relação,
+                   por meio de sua chave primária.
+
+* DML (Data Manipulation Language)
+    - Alguns comandos daDML
+        - INSERT
+            INSERT INTO tabela_n VALUES ('attr1', attr2, ...)
+            - Ex1:
+                INSERT INTO PROJETO VALUES ('ProductX','1','Bellaire')
+                INSERT INTO PROJETO VALUES ('ProductY','2','New York')
+            - Ex2:
+                É possível inserir usando dados
+        - UPDATE
+        
+        - DELETE
+            DELETE FROM tabela_n1 [FROM tabela_n2]
+            [WHERE <condição de localização>]
+        
+        - SELECT
+            SELECT [ DISTINCT | ALL ] <lista de atributos>
+            FROM <lista de tabelas>
+            [ WHERE <condições>             ]
+            [ GROUP BY atributo             ]
+            [ HAVING <condições>            ]
+            [ ORDER BY atributo [ASC|DESC]  ]
+            
+            - <lista de atributos> ou * (para todos os atributos)
+            - ALL:   inclui tuplasduplicadas (é o defauld)
+            - FROM:  em que relações;
+            - WHERE: condições da seleção;
+            
+            Funciona como no Cálculo e Álgebra Relacional. 
+            
+            - Ex1: Select/Project
+                
+                - Em SQL:
+                    SELECT DATANASC, ENDERECO ← Projeção (π)
+                    FROM   EMPREGADO          ← Seleção  (σ)
+                    WHERE  PNOME='John'       ← Condições da seleção
+                           AND MNOME='B' 
+                           AND SNOME='Smith'
+                
+                - Em Álgebra Relacional:
+                    EMP_SMITH ← σ_PNOME='John' AND MNOME='B'
+                                AND SNOME='Smith' (EMPREGADO)
+                    RESULTADO ← π_DATANASC,ENDERECO (EMP_SMITH)
+                
+                - Em Cálculo Relacional
+                    { t.DATANASC, t.ENDERECO | EMPREGADO(t) 
+                    AND MNOME='B' AND SNOME='Smith' }
+                
+                O operador SELECT é como uma junção de SELECT e PROJECT.
+            
+           - Ex2: Obter o nome e o endereço dos empregados que 
+                  trbalham para o departamento de 'Pesquisa'
+
+                - Em SQL:
+                    SELECT PNOME,ENDERECO
+                    FROM   EMPREGADO,DEPARTAMENTO
+                    WHERE  DNOME='Pesquisa' AND DNUMERO=DNUM;
+            
+            - Ex3: Para todo projeto localizado em 'Stafford', listar
+                   o número do projeto, o número do departamento
+                   responsável, o sobrenome, endereço e data de
+                   nascimento do gerente responsável pelo departamento
+                
+                - Em SQL:
+                    SELECT PNUMERO,DNUM,SNOME,DATANASC,ENDERECO
+                    FROM   PROJETO,DEPARTAMENTO,EMPREGADO
+                    WHERE  DNUM=DNUMERO AND GERNSS=SSN
+                           AND PLOCALIZACAO='Stafford'
+                    
+                    Para interpretarmos onde estão os JOIN's 
+                    precisamos olhar quais campos da tabela e,
+                    então, interpretar como são feitas as coisas.
+                
+                - Em Álgebra Relacional:
+                    STAFFORD_PROJS ← σ_PLOCALIZACAO='Stafford'(PROJETO)
+                    CONTR_DEPT     ← (STAFFORD_PROJS ⋈ _DNUM=DNUMERO
+                                     DEPARTAMENTO)
+                    PROJ_DEPT_MGR  ← (CONTR_DEPR ⋈ _GERNSS=NSS
+                                     EMPREGADO)
+                    RESULT         ← π_PNUMERO,DNUM,SNOME,ENDEREDO,
+                                     DATANASC (PROJ_DEPT_MGR)
+           
+           - ALIASES
+                Podemos "apelidar" algumas das tabelas (relações)
+                Pelo campo "FROM", indicando:
+                    SELECT E.NSS
+                    FROM   EMPREGADO E
+            - WHERE não especificado
+                É equivalente a um WHERE TRUE - devolverá todas as
+                tuplas de uma relação, sem restrições.
+            - SELECT *
+                Seleciona todos os atributos de uma certa tupla,
+                sem projeções.
+            - DISTINCT
+                Garante que não teremos duplicações de tuplas.
+                As duplicações podem acontecer porque o SQL não 
+                trata umarelação como um conjunto. A restrição de
+                unicidade só é garantida para PRIMARY_KEY.

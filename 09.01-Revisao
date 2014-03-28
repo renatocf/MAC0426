@@ -1,0 +1,29 @@
+* Exemplo para ajudar a entender o operador DIVISÃO:
+             
+    a  |  b     1) a' = a-b
+       '-----   2) Se a' < b, pare
+    d     c     3) Caso contrátio, a'' = a'-b
+                
+                Ou, então
+                1) Enquanto a < b, 
+                  a = a-b
+
+    Estudante                Subconjunto Estudante
+    .------,------,------,   .------,------,------,
+    | NUSP | data |      |   | NUSP | data |      |
+    |------|------|------|   |------|------|------|
+    | 0001 | wxyz |      |   | 0001 | wxyz |      |
+    | 0002 | wxyz |      |   | 0002 |      |      |
+    | 0001 |      |      |   
+    | 0002 |      |      |   
+    
+    .--------> Conjunto
+    |     .--> Subconjunto
+    a  |  b   } 
+       '----- } A lógica será a MESMA da divisão normal, PORÉM,
+    d     c   } tratando 'a' e 'b' como conjuntos. Estamos vendo
+                QUAIS elementos têm todas as propriedades do subconjunto
+
+* Cálculo Relacional de Domínios
+    - É o mesmo que o Cálculo Relacional de Tuplas, mas tratando de
+      INTERVALOS - não domínios
