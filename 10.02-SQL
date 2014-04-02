@@ -1,0 +1,97 @@
+FUNÇÕES AGREGADAS
+===================
+
+As funções agregadas não estão relacionadas aos operadores algébricos. 
+São APENAS uma forma de adicionarmos uma funcionalidade EXTRA sobre
+o potencial dos vancos de dados.
+
+VISÕES
+=======
+Visões permitem salvar uma expressão de consulta dentro de uma tabela.
+Ela é utilizada, principalmente, para facilitar comandos repetidos 
+(principalmente JOIN's). O que é salvo, na realidade, é o comando 
+necessário para a consulta (que é recalculado, para manter a visão
+atualizada, durante uma consulta). NÃO existe uma tabela salva, 
+apenas o comando que ela gera. Isso facilita, principalmente, 
+os JOIN's.
+
+DIVISÃO EM SQL
+===============
+Encontrar os nomes de empregados que trabalham em todos os projetos
+controlados pelo departamento 5.
+    - Em geral, o 'todos/para todo' indicam divisão;
+    - Precisamos identificar nossos conjuntos A e B:
+        A := empregados em todos os projetos
+        B := projetos do departamento 5.
+    - 
+        SELECT PNOME,SNOME       }
+        FROM EMPREGADO           } Pega empregados 
+        WHERE((SELECT PNO        
+            FROM TRABALHA-EM     
+            WHERE NSS=ENSS)      } Que trabalham em algum projeto
+            CONTAINS             
+                (SELECT PNUMERO  } Nosso subconjunto B, em que 
+                 FROM PROJETO    } temos os projetos do departamento 5.
+                 WHERE DNUM=5)   } 
+        )
+        
+        O passo-a-passo usa, primeiro, a divisão para pegar quais 
+        os projetos do departamento 5, para depois darmos um JOIN 
+        selecionando os empregados nestes projetos.
+    
+    - Em alguns casos, porém, não temos o CONTAIS. Nesse caso, p
+      precisamos "montar" o operador divisão usando os operadores.
+      No Cálculo Relacional, teríamos:
+        { e.PNOME, e.SNOME | EMPREGADO(e) AND
+            (∀ x)((PROJeTO(x) AND x.DNUM=5) →
+                (∃ w)(TRABALHA-EM(w) 
+                    AND w.ENSS=e.NSS
+                    AND x.PNUMERO=w.PNO))}
+        
+        Precisamos tentar transformar o →  e o ∀, pois o SQL não tem
+        uma forma simples de implementar estes operadores. Porém, o 
+        EXISTS (e o NOT EXISTS) são simples no SQL.
+        
+        { e.PNOME, e.SNOME | EMPREGADO(e) AND
+            NOT (∃ x)((PROJETO(x) AND x.DNUM=5) AND
+                NOT (∃ w)(TRABALHA-EM(w) 
+                    AND w.ENSS=e.NSS
+                    AND x.PNUMERO=w.PNO))}
+        
+        Enfim, no SQL:
+
+MAIS SQL
+=========
+* A SQL permite que consultas verifiquemse umvalor é nulo utilizando
+  IS ou IS NOT. Esse resultado tem sempre um valor semântico. Por 
+  exemplo, se um empregado tem, ou não, um supervisor.
+* Junção de Relações
+    * Pode especificar uma "junçãode relações" na cláusula FROM;
+    * Permitirá que criemos os θ-JOIN's, NATULAL JOIN, entre outros.
+    * Exemplo 1:
+        - Em SQL:
+            SELECT PNOME,SNOME,ENDEREÇO
+            FROM EMPREGADO,DEPARTAMENTO
+            WHERE DNOME='Pesquisa' AND DNUMERO=DNUM;
+        
+        - Em português: 
+            Nome e Endereço dos empregados que trabalham no 
+            departamento de pesquisa.
+        
+        - Escrevendo com θ-JOIN:
+            SELECT PNOME,SNOME,ENDEREÇO
+            FROM   EMPREGADO JOIN DEPARTAMENTO ON DNUMERO=DNUM
+            WHERE  DNOME='Pesquisa'
+        
+* Em Álgebra e Cálculo Relacional, não temos as funções agregadas.
+  É interessante, nesses casos, usar uma função 'f' para podermos
+  manter a expressão completa - mas ela não tem significado.
+
+* GROUP BY e HAVING
+    * GROUP BY junta as tuplas com valores iguais de algum atributo.
+    * HAVING   junta as tuplas também, mas usando alguma função 
+               AGREGADA para separar as tuplas em grupos.
+
+* ORDER BY
+    * Ordena as tuplas conforme critérios (geralmente, usando funções
+      agregadas).
