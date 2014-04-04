@@ -1,0 +1,13 @@
+REVISÃO
+=========
+
+* Projeto Conceitual, lógico e físico de BD;
+* Mapeamento Conceitual → lógico
+    - Abstrações: { classificação
+                  { especialização
+                  { agregação
+                  { "composição" (não vista ainda)
+* Modelo Relacional
+    - Estrutura de dados
+    - Linguagens "formais" (Álgebra Relacional, Cálculo Relacional)
+    - SQL

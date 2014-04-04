@@ -1,0 +1,140 @@
+* Hoje, trataremos do mapeamento do modelo conceitual para o o lógico.
+* Felizmente, nosso algoritmo de mapeamento já nos fará cair na 3ª FORMA
+  NORMAL
+
+DEPENDÊNCIA FUNCIONAL
+======================
+
+* Símbolo: X → Y
+* Se X=1, então Y=5; teremos que dado X=1, Y=5.
+* Ex:
+      CPF  →   Nome   } Dado o CPF 005005, teremos que o nome DEVERÁ
+    005005     Jef    } ser Jef. Caso contrário, não será uma
+                        dependência funcional. O nome "funcional" é
+                        vem porque, como numa função, cada elemento
+                        do domínio está associado a um único elemento
+                        da imagem (a inversa nãoénecessariamente 
+                        verdadeira).
+
+* Formas Normais são descritas em termos das dependÊncias funcionais
+  entre os atrivutos de uma relação.
+
+* Abordagens de Projeto
+    - Top-down
+        * Iniciar com o agrupamento dos atributos obtidos a partir do 
+          projeto conceitual de mapeamento;
+        * Isso é chamado de pro
+* Objetivo: apresentar um 'guia informal' para avaliar um banco de 
+            dados relacioonal.
+
+* GUIA INFORMAL
+    - Guia 1: Informalmente, cada tupla de uma relação deve representar 
+              algum conceito importante.
+    
+    - Anomalias possíveis: { inserção
+                           { remoção
+                           { modificação (se um BD tem replicação, e 
+                                          se mudamos em um lugar, mas
+                                          não outro, teremos problemas)
+    - A 'forma normalizada' é justamente ter o mínimo possível, ou
+      nenhuma, replicação.
+    
+    - TUPLAS EXPÚRIAS: tuplas geradas por produtos cartesianos (o que
+                       inclui os JOIN's). Algumas combinações não são
+                       verdadeiras. 
+    
+* DEPENDÊNCIAS FUNCIONAIS
+    - Um conjunto de atributos X determina o funcionamento de um 
+      conjunto de atributos Y, se cada elemeneto de x ∈ X define 
+      um único elemento y ∈ Y.
+    - Formalmente, se X → Y, ∀ (t1,t2) ∈ r(R), t1[X]=t2[X] → t1[Y]=t2[Y]
+    - Se K é uma chave de R, então K determina funcionalmente todos
+      os atributos de R (uma vez que nós nunca teremos duas tuplas 
+      distintas com t1[K]=t2[K])
+    
+    - Importante:
+        - X → Y especifica uma restriçãosobre toas as instâncias de
+          r(R).
+        - As DFs são derivadas das restrições do mundo real, e não 
+          de uma extensão específica da relação R. Isso significa 
+          que a dependência funcional tem significado SEMÂNTICO. 
+          Dizer, por exemplo, que CPF → NOME, um SGBD não deverá 
+          permitir que se insira um novo CPF com nome diferente.
+          
+          Olhar para uma relação e tentar dizer quala dependência
+          funcional é INCORRETO, pois se um elemento do domínio
+          mapear para mais de um elemento da imagem, não teremos
+          mais umarelação funcional.
+    
+    - Regras de inferência de Armstrong:
+        - RI1 (Reflexiva)   Se Y ⊆ X, então X → Y
+        - RI2 (Aumentativa) Se X → Y, ZX → ZY (com ZX := Z U X)
+        - RI3 (Transitiva)  Se X → Y, e Y → Z, X → Z.
+
+* NORMALIZAÇÃO DE RELAÇÕES
+    - Normalização: Processo de decompor relações"ruins" dividindo 
+      seus atrivutos em relações menores. (Refatorar/fatorar o banco 
+      de dados).
+    - Forma normal: indica o nível de qualidade de uma relação.
+    
+    - Normalização de relações:
+        - 2FN, 3FN, BCFN baseiam-se em chaves e DFs de uma relação
+          esquema.
+        - 4FN e 5FN baseiam-se em chaves e dependências 
+          multivaloradas (não serão discutidas)
+    
+    - Revisão:
+        - Super-chave, chave, chave-candidata.
+        - Atributo primo (ou primário) é membro de alguma
+          chave-candidata;
+        - Atributo não-primo é um atrivuto que não é primo - isto é,
+              não é membro de qualquer chave-candidata.
+
+    - Formas normais:
+        - 1ª Forma: proíbe atributos COMPOSTOS e MULTIVALORADOS
+          (nosso esquema de mapeamento já faz isso. A própria 
+          definição de relações já permite isso)
+        - 2ª Forma: 
+            - Utiliza conceitos de DFs e chave-primária;
+            - Definições utilizadas:
+                - Atributo-primo (acima);
+                - Dependência funcional total: uma DF, Y → Z, na
+                  qual a remoção de qualquer atributo de Y invalida DF.
+                - Exemplos:
+                    - { NSS,PNUMERO } → HORAS é uma DF total, uma vez
+                      que NSS não determina horas nem PNUMERO.
+            
+            - Uma relação esquema R está na 2FN se estiver na 1FN
+              e todos os atributos não-primos de A de R forem totalmente
+              dependentes da chave-primária.
+            
+            - Se tivermos atributos primos (que compõem a chave) que 
+              só tem dependência funcional com uma PARTE dos atributos
+              não-primos, então NÃO ESTAREMOS na 2FN. Nesse caso, 
+              devemos tentar QUEBRAR em várias relações para evitarmos
+              essas dependências funcionais parciais.
+
+            - Ex:
+                | NSS | PNUMERO | HORAS | ENOME | PNOME | PLOCALIZAÇÃO |
+                  '''   '''''''     ^       ^       ^          ^
+                   '-------'--------'       |       |          |
+                   |       '----------------:-------'----------'
+                   '------------------------'
+                
+                | NSS | PNUMERO | HORAS | } Relacionamento
+                  '''   '''''''           } (TRABALHA_EM)
+                
+                | NSS | ENOME | } Entidade (parte de empregado)
+                  '''
+                
+                | PNUMERO | PNOME | PLOCALIZAÇÃO | } Entidade
+                  '''''''                          } (Projeto)
+        
+        - 3ª Forma: 
+            - Não existem dependências funcionais indiretas.
+              Poderíamos, por exemplo, ter uma dependência funcional
+              na forma:
+
+                 | A → B → C |    } A 2FN permite que tivéssemos 
+                  /         \     } esse tipo de nova relação. Na
+              | A → B | | B → C | } 3FN, ainda deveoms quebrá-la.
