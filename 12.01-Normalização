@@ -1,0 +1,132 @@
+NORMALIZAÇÃO
+==============
+
+* Verificação de qualidade do projeto lógico de BD.
+  (Pode ser aplicado a outros modelos, mas para BD não estruturados,
+  como o de grafos, não faz tanto sentido).
+
+* R(A1,A2,...,An)  < Dois conjuntos (relação e relacionamentos)
+  rR(t1,t2,...,tn) < * Integridade referencial;  } Restrições
+                   < * Atomicidade de atributos. } do Relacional
+
+* Técnicas para garantir a qualidade do BD:
+    
+    1)                    mapeamento
+       Projeto Conceitual ----------> Projeto lógico (relacional)
+                           (regras)              3FN
+
+    2) Verifiar o grau de Normalização do seu BD.
+        - Dependência funcional.
+            X  →  Y
+            01    01 --. Os mapeamentos sempre devem levar um mesmo
+            01    01 <-' elemento do domínio no mesmo da imagem
+
+        - Formais normais: 1FN/2FN/3FN/FNBC
+          1) 1FN → atributos atômicos.
+                   (no caso do modelo relacional, vem da própria
+                   definição dos atributos das tuplas)
+          2) 2FN → DEPENDÊNCIAS PARCIAIS DAS CHAVES não são admitidas.
+                    
+          3) 3FN → DEPENDÊNCIAS TRANSITIVAS não são admitidas.
+                                                
+               df3       .------.---------.     
+                       .---.    ↓         ↓     
+                    .----.----.----.----.----.
+                    | A1 | A2 | a3 | a4 | a5 |   ---\ Decomposição
+                    '----'----'----'----'----'   ---/ de relações
+               df1     |___^|        ^           
+                            |________|          
+               df2                              
+
+               - Com dependência parcial de chave, estamos na df1;
+               - Com dependência transitiva, estamos na df2;
+               - Se não tivermos estas dependências, estamos na df3.
+
+* Exemplos de Restrições de DF
+    - O número do seguro social determinao nome do empregado:
+        NSS → ENOME
+    - O número do proketo determina o nome do projeto e a sua 
+      localização:
+        PNUMERO → { PNOME, PLOCAL }
+    
+* 2ª Forma Normal
+    - Um atributo primo é um atributo que não participa da chave primária.
+    - Um atributo não-promo não participa da chave primária.
+    - Um BD está na 2FN ↔  todos os atributos não-primos têm dependência
+                           funcional com todos os primos.
+
+    - Ex:
+        
+            .-----.---------.-------.-------.-------.-----------.
+            | SSN | PNUMBER | HORAS | ENOME | PNOME | PLOCATION | 
+            | ^^^ | ^^^^^^^ |       |       |       |           |
+            '-----'---------'-------'-------'-------'-----------'
+               '-------'--------^       ^       ^         ^
+               '-------:----------------'       |         |
+                       '------------------------'---------'
+            
+            .-----.---------.-------.        } 
+            | SSN | PNUMBER | HORAS |        } 
+            | ^^^ | ^^^^^^^ |       |        } 
+            '-----'---------'-------'        } Neste ponto, já 
+               '-------'--------^            } conseguimos quebrar
+            .-----.-------.                  } os temas e deixar
+            | SSN | ENOME |                  } na 2ª forma normal
+            | ^^^ |       |                  } 
+            '-----'-------'                  } 
+               '------^                      } 
+            .---------.-------.-----------.  } 
+            | PNUMBER | PNOME | PLOCATION |  } 
+            | ^^^^^^^ |       |           |  } 
+            '---------'-------'-----------'  } 
+                 '--------^---------^        } 
+    
+    - Um problema COMUM é que, às vezes, para fazermos uma quebra,
+      precisaríamos DESTRUIR uma dependência funcional. Nesse caso,
+      É MELHOR DEIXAR A DEPENDÊNCIA FUNCIONAL E O BANCO TER ALGUMA
+      INCONSISTÊNCIA.
+
+* 3ª Forma Normal
+    - A 3ª Forma Normal não permite transitividade das dependências
+      funcionais.
+    - Já estando na 3FN, conseguimos o que queremos.
+
+REDEFINIÇÂO DO CONCEIDODE FN
+==============================
+
+* Redefinição de 2FN
+    - Uma relação esquema R etá na 2FN se todos os atributos não
+      primos A forem totalmente dependentes de todas as chaves de R.
+    
+    - Ex: 
+        EMP_PROJ(nss, pnúmero, horas, enome, pnome, plocalização)
+                 ^^^  ^^^^^^^    ^      ^      ^         ^
+                  |_____|________|      |      |         |
+                  |_____:_______________|      |         |
+                        |______________________|_________|
+        
+        Não está na 2FN porque enome depende apenas de NSS e 
+        pnome/plocalização dependem de pnúmero.
+    
+* Redefinição de 3FN
+    - Uma relação esquema R está na 3FN se, sempre qe houver uma DF 
+      X→ A, então umadas duas condições são válidas:
+      - X é uma superchave de R, ou
+        ^-- X ajuda a identificar univocamente os outros atributos
+      - A é um atributo primo de R
+        ^-- A é um dos elementos que compõem a chave
+
+    - NOTA: A Forma Normal de Boyle-Codd não admite a segunda 
+            condição.
+      
+    - Ex: 
+      EMP_DEPT(enome, nss, datanasc, endereco, dnumero, dnome, dgernss)
+                 ^    ^^^      ^         ^        ^|      ^       ^
+                 |_____|_______|_________|________||      |       |
+                                                   |______|_______|
+      
+      Esta relação-esquema NÃO ESTÁ NA 3FN, pois o NSS não é, neste
+      caso, uma super-chave de R (ele NÃO DETERMINA dnome e dgernss).
+    
+    - Na forma normal de Boyce-Cott, precisaremos que TODOS OS 
+      ATRIBUTOS DO DOMÍNIO DA DEPENDÊNCIA FUNCIONAL SEJAM SUPER-CHAVES.
