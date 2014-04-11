@@ -1,0 +1,185 @@
+NORMALIZAÇÃO
+==============
+
+* A grande utilidade da normalização é garantir que não haja
+  inconsistências no Banco.
+* Na 3ª Forma Normal, para todas as dependências funcionais X → A,
+  ou X é super-chave, ou A é atributo-primo.
+* O processo de normalização, até agora, não levavam em conta as DF 
+  de chaves CANDIDATAS. Como nem sempre elas existem, não precisamos
+  nos preocupar tanto com ela.
+* Durante a implementação, veremos que sempre há uma dependência 
+  funcional com relação à chave que existe por causa do MODELO FÍSICO.
+* Em geral, as relações que surgiram de entidades do modelo MER não
+  têm dependências funcionais além da dependência de chave primária
+  levando a outros atributos. As dependências funcionais EXTRAS estão,
+  em geral, nas relações surgidas dos relacionamentos.
+* Vale lembrar que as dependências funcionais determinam relações
+  INTRACLASSE, diferentes das relações INTERCLASSES que vêm dos 
+  relacionamentos do modelo conceitual.
+
+* Ex:
+    - 1FN: (tem dependências parciais)
+    
+    LOTES
+    | #Id_propriedade | Nome_Município | #Lote | Área | Preço | Imposto |
+             |________________^____________^_______^______^________^
+             ^________________|____________|_______^______^________^
+                              |____________________________________^
+                                                   |______^
+    
+    - 2FN: (tem dependências transitivas)
+    
+    LOTES1
+    | #Id_propriedade | Nome_Município | #Lote | Área | Preço |
+             |________________^____________^_______^______^________^
+             ^________________|____________|_______^______^________^
+                                                   |______^
+    
+    LOTES2
+    | Nome_Município | Imposto |
+             |____________^
+    
+    - 3FN: (tem dependências transitivas com relação às chaves
+            candidatas)
+    
+    LOTES1A
+    | #Id_propriedade | Nome_Município | #Lote | Área |
+             |________________^____________^_______^
+             ^________________|____________|_______^
+    
+    LOTES1B
+    | Área | Preço |
+        |______^
+    
+    LOTES2
+    | Nome_Município | Imposto |
+             |____________^
+    
+    Temos um problema aqui: o SGBD nos garante a dependência funcional
+    da chave primária com os outros atributos da relação. Porém, a 
+    volta não vale. No caso, ao inserirmos um Lote+Município,
+    precisaríamos ter o mesmo ID. Mas isso nem sempre vale.
+    
+    - BCNF
+    
+    A forma normal de Boyce-Codd (FNBC) está sempre na 3FN. Porém,
+    para toda dependência funcional X → A, a condição é que X seja
+    uma super-chave. A condição B da 3NF não está presente.
+    
+    Para exemplificar o uso da BCNF, suporemos a existência de 
+    uma dependência funcional da Área com relação ao nome do 
+    município.
+    
+    LOTES1A
+    | #Id_propriedade | Nome_Município | #Lote | Área |
+             |________________^____________^_______^
+             ^________________|____________|_______^
+                              ^____________________|
+    
+    LOTES1B
+    | Área | Preço |
+        |______^
+    
+    LOTES2
+    | Nome_Município | Imposto |
+             |____________^
+    
+    Ela não está na BCNF, pois Área, que não é uma super-chave
+    (pois não determina UNIVOCAMENTE desta tupla). Ela não está
+    na FNBC. Precisaríamos fazer uma quebra:
+    
+    LOTES1AX
+    | #Id_propriedade | Nome_Município | #Lote | Área |
+             |________________^____________^_______^
+             ^________________|____________|_______^
+    
+    LOTES1AY
+    | Área | Nome_Município |
+        |___________^
+    
+    LOTES1B
+    | Área | Preço |
+        |______^
+    
+    LOTES2
+    | Nome_Município | Imposto |
+             |____________^
+    
+    Agora, como não há dependências de atributos não-primos para
+    atributos primos (não-primo → primo).
+
+* Ex (para a prova):
+    
+    | Aluno | Disciplina | Instrutor |
+        |__________|___________^
+                   ^___________|
+    
+    Poderíamos pensar em Aluno/Disciplina/Instrutor como 3 entidades
+    que geram relações primárias. Os nomes poderiam ser IDs, e esta
+    relação representar um relacionamento triplo. As dependências 
+    funcionais, dentro do contexto da classe, estão LIMITANDO o 
+    potencial do relacionamento. 
+    
+    Mas o que aconteceria se a dependência funcional fosse:
+    
+    | Aluno | Disciplina | Instrutor |
+        |__________|___________^
+        ^__________^___________|
+    
+    Neste caso, Instrutor identificaria univocamente a tupla e,
+    portanto, seria super-chave. Como todas as df têm como 
+    domínio uma super-chave, estamos na BCNF.
+    
+* Exemplo de relationamento triplo com relação a DF:
+    
+                Notebook        User
+                   |             |
+                   '------/\-----'
+                          \/
+                          |
+                        Projeto
+    
+    - Relação 1|1|1:
+    
+    df1 .----------.----------.
+        ↓          |          ↓
+    df2 .----------.----------.
+        ↓          ↓          |
+    df3 .----------.----------.
+        |          ↓          ↓
+    .---------.---------.------------.
+    | Id_Note | Id_User | Id_Projeto |
+    |---------|---------|------------|
+    |   ...   |   ...   |    ...     |
+    
+    - Relação M|1|1:
+    
+    df1 .----------.----------.
+        ↓          |          ↓
+    df2 .----------.----------.
+        ↓          ↓          |
+    .---------.---------.------------.
+    | Id_Note | Id_User | Id_Projeto |
+    |---------|---------|------------|
+    |   ...   |   ...   |    ...     |
+    
+    - Relação M|N|1:
+    
+    df1 .----------.----------.
+        ↓          ↓          |
+    .---------.---------.------------.
+    | Id_Note | Id_User | Id_Projeto |
+    |---------|---------|------------|
+    |   ...   |   ...   |    ...     |
+    
+    - Relação M|N|P:
+    
+    # Não precisamos de nada
+    .---------.---------.------------.
+    | Id_Note | Id_User | Id_Projeto |
+    |---------|---------|------------|
+    |   ...   |   ...   |    ...     |
+
+
+* IMPORTANTE: Sem chave candidata, NÃO HÁ BCNF.
