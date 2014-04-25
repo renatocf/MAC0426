@@ -1,0 +1,17 @@
+Projeto
+==========
+
+1) Entregaremos, primeiro, a descrição do problema.
+
+* Arquivo brModelo;
+* Descrição do Modelo;
+* Criação do Banco de Dados;
+* População do Banco de Dados;
+* Consulta (divisão).
+
+FERRAMENTAS
+=============
+
+* brModelo para Modelagem.
+* mySQL, mySQL-server.
+* phpMyAdmin.
