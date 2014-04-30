@@ -1,0 +1,36 @@
+EX2-Prova) Modelagem de RESTRIÇÃO SOBRE INSTÂNCIA DOS DADOS
+
+                                                        / inserção
+   .--------.        .--------.        .---------.   ^  - remoção
+   |  USER  |M__/\__N| PERFIL |M__/\__N| SERVIÇO |--/_\ - modificação
+   '--------'   \/   '--------'   \/   '---------'      \ visualização
+    |- a1 |1          |- b1 |1          |- c1  |N       
+    |- a2 |           |- b2 |           |- c2  |
+     ...  |            ...  |            ...   |
+    '- an |           '- bn |           '- cn  |
+          |                 |                  |
+          |                 ~ (restrição)      ~ (restrição)
+          |                 |  subconjunto     |  serviço é
+          |                 |  do tutor        |  subconjunto 
+          |                 |                  |  do perfil
+          '----------------/\------------------'  do tutor
+                           \/  
+                            |N 
+                      ..............
+                      |.----------.|
+                      || TUTELADO ||
+                      |'----------'|
+                      ''''''''''''''
+
+* Uma outra forma que carece de restrição de dados é o caso de dois
+  relacionamentos MUTUAMENTE-EXCLUSIVOS.
+
+                                 .------.
+    (restrição)   .--|~|--/\-----|  E3  |
+     participa    |       \/     '------'
+     de e1 ou     |    rel_e1_e3
+      de e2       |                       
+               .------.               .------.
+               |  E1  |--|~|--/\------|  E2  |
+               '------'       \/      '------'
+                          rel_e1_e2
