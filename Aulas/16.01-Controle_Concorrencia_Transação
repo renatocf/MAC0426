@@ -1,0 +1,245 @@
+CONTROLE DE CONCORRÊNCIA DE DADOS
+===================================    
+                .---.
+    ()          |   |
+    /\ -------> | S |
+    /\          |   |
+                |   | 
+    ()          | G | <----> .----.
+    /\ -------> |   |        '----'
+    /\          |   | <----> |    | -.
+                | B |        |    |  |- ED
+    ()          |   | <----> '----'  |- Log
+    /\ -------> |   |                '- Index
+    /\          | D |
+                |   |
+                '---'
+                /   \_ Transação { begin ... end }
+                |_ núcleo de controle de concorrência
+
+ACESSO VIA TRANSAÇÃO
+----------------------
+
+                                         | 
+        TRANSAÇÃO (SQL + C + Linguagem)  | Para acessarmos os dados no
+                                         | banco, é necesário que 
+    () t1 { begin                        | criemos transações - que têm
+    /\    { ...   --.                    | INÍCIO (begin) e FIM (end). 
+    /\    { end      \                   | Uma transação é ATÔMICA,
+                      \   .------.       | e para o usuário o resultado
+    () t2 { begin      \  '------'       | deve PARECER que foi
+    /\    { ...   ------> |  **  |       | realizado na ordem para ele,
+    /\    { end        /  | dado |       | sem interferências externas.
+                      /   |      |       | Isso é importante para dar a
+          ...        /    '------'       | aparência de que cada usuário
+                    /                    | é o único a ter acesso ao 
+    () tn { begin  /                     | Banco de Dados.
+    /\    { ...   /                      | 
+    /\    { end                          | 
+                                         | 
+
+Dentro dos ti's, temos operações de acesso, atualização e inserção de 
+dados:
+                            { read  xi
+                            { write xi
+
+Entretanto, o que aconteceria se várias transações tentassem acessar o 
+mesmo dado? Nesse caso seria necessário criar uma ORDENAÇÃO (parcial,
+pois só considera os usuários com solicitações ativas) das solicitações.
+Ela poderia ser por PRIORIDADE ou TEMPO.
+
+Ex:
+    Suponhamos uma linha de transações t1, t2, ..., tn.
+    A ordenação feita foi a execução tn,t1,t2.
+
+    tn { write x;       |
+       { ...      10h   |
+       { write x;       |
+                        |
+    t1 { write x;       | -> write x
+       { ...      1min  |
+                        |
+    t2 {                |
+       { ...      10s   |
+    
+    Entretanto, elas têm tempos diferentes (tn, a primeira, demora
+    muito e todas querem acessar o mesmo dado). Como resolver para
+    que se mantenha a ATOMICIDADE de cada uma delas, e ainda assim
+    executar sem tanto tempo?
+    
+    O grande princípio é fazer um ENTRELAÇAMENTO, criando uma 
+    quebra na ATOMICIDADE. Porém, esse entrelaçamento DEVERÁ
+    manter o resultado, para certo dado, igual a se a execução
+    fosse serial. O entrelaçamento será chamado τ?
+    
+                         (tn,t1,t2) => τ
+                         τ ≡ (tn,t1,t2)
+    
+    Esse é o grande princípio da TEORIA DA SERIAÇÃO.
+
+PROPRIEDADES DA TRANSAÇÃO (ACID)
+----------------------------------
+
+As 4 propriedades seguintes são básicas para a teoria de 
+
+* Atomicidade
+    Ou todas as operações são confirmadas no bando ou todas são
+    desfeitas.
+
+* Consistência
+                    .------.             .------.
+                    '------'  transação  '------'
+                    |      | ----------> |      |
+                    |      |             |      |
+                    '------'             '------'
+                BD consistente       BD consistente
+
+* Isolamento
+    A execução de uma transação não pode ser afetada por outras
+    executando concorrentemente. Tudo deve se passar como se todos os
+    recursos estivessem disponíveis. (Primeira ideia do entrelaçamento).
+
+* Durabilidade
+    Os efeitos de uma transação confirmada não podem ser desfeitos.
+
+ESCALONAMENTOS
+----------------
+
+* As ficersas operações de transações precisamser executadas em alguma
+  ordem.
+* Escalonamento = Ordem de execução
+* Quando um escalonamento é correto?
+* Como garantir que um escalonador gera apenas esscalonamentos corretos?
+* Teoria da Seriação
+
+* Operações consideradas: leitura, escrita, confirmação, aborto.
+
+* Ex:
+    T1: depósito de v=$50           T2: juros de 10%
+    A = Read[x]   <-- início        B = Read[x]    <-- início
+    A = A + 50;                     B = 1.1 * B;             
+    Write[x, A];                    Write[x, B];             
+    Commit;       <-- fim           Commit;        <-- fim   
+    
+    Escalonamentos SERIAIS com x_inicial = $100
+    * (T1,T2): x_final = $165
+    * (T2,T1): x_final = $160
+    
+    Esse escalonamento é um controle de concorrência a nível inter-
+    transações. Entretanto, a nível intra-transação, ela não é 
+    um tratamento de concorrência bom.
+    
+    Poderíamos ordenar por tempo de execução, mas não é possível,
+    na maioria dos casos, DIMENSIONAR isso.
+
+* Para otimizarmos o uso dos dados e evitarmos problemas de tempo,
+  precisaremos fazer uma "quebra" na atomicidade e do isolamento.
+  Porém, ela não pode ser feita de qualquer modo. Se, logo após 
+  usarmos o dado em t1 o liberássemos para t2, teríamos:
+
+                 A = Read[x];     |        
+                                  |      B = Read[x];
+                 A = A + 50;      |       
+                                  |      B = 1.1 * B;
+    operação --> Write[x, A];     |       
+    perdida                       |      Write[x, B];
+                 Commit;          |       
+                                  |      Commit;
+
+  Para o usuário que pediu t1, na hora do Commit, x_final = $110.
+  Mas como ele foi modificado por B, o commit mostraria um valor
+  diferente do esperado. O ISOLAMENTO foi VIOLADO, pois o usuário
+  pode ver que outro fez alguma modificação, refletida na transação
+  dele:
+  
+              x_final = $110 (Violação do ISOLAMENTO)
+
+  Para solucionar, temos a TEORIA CLÁSSICA DA SERIAÇÃO.
+
+TEORIA CLÁSSICA DA SERIAÇÃO
+-----------------------------
+
+* Trata das operações executadas
+* Ignora o código da transação
+* Operações consideradas:
+    * leitura:          r[x]
+    * escrita:          w[x]
+    * confirmação:      c
+    * aborto:           a
+    * qualquer dado:    x
+
+* Transações T1 ≠ T2 concorrentes;
+* Duas pérações sobre o MESMO DADO confitam se uma delas é OPERAÇÃO
+  DE ESCRITA
+* Pares conflitantes:
+                ri[x] < wj[x]           wi[x] < wj[v]
+                rj[x] < wi[x]           wj[x] < wi[x]
+                wi[x] < rj[x]
+                wj[x] < ri[x]
+    
+* E1 é equivalente a E2:
+    E1 e R2 ordenam conflitos da mesma forma:
+* Um escalonamento é SERIÁVEL se for equivalente a algum escalonamento
+  SERIA.
+* Dado E, podem existir mais de um escalonamento equivalente. 
+
+* E é um escalonamento sobre T1,...,Tn
+* Gs(E) é definido por meio do grafo:
+    * Nós: T1,...,Tn
+    * Arestas dirigidas: Ti → Tj se existe x tal que:
+        pi[x] e qi[x] são operações conflitantes;
+        pi[x] < qi[x] em E;
+
+* Ex:
+             w1[x] < w2[x]     }
+                ________       } Como T1 precede T2 e as operações 
+               /       \/      } conflitam, montamos um grafo dirigido
+           (T1)         (T2)   } entre os nós de T1 e T2. Este grafo
+                               } dirá quando o escalonamento é possível.
+                               }
+    
+
+* TEOREMA DA SERIAÇÃO:
+    Um escalonamento E é seriável se e somente se Gs(E) é acíclico.
+
+* Ex: Escalonamento com DEADLOCK
+    
+                          w1[x] < w2[x]     
+                             ________       
+                            /        \/     
+                        (T1)         (T2)   
+                           /\        /      
+                             ^^^^^^^^       
+                          w2[x] < w1[x]     
+
+* Apesar de termos essa solução, montar um grafo para 2000 solicitações
+  por minuto num grande SGBD seria EXTREMAMENTE INEFICIENTE. Para evitar
+  isso, criou-se o PROTOCOLO DE BLOQUEIO BIFÁSICO, que evita criar 
+  o grafo.
+
+PROTOCOLO DE BLOQUEIO BIFÁSICO
+--------------------------------
+
+* Após liberar um bloqueio, uma transação não pode mais obter nenhum
+  bloqueio.
+    
+                                     | 
+    Nº boqueios                      | O protocolo de bloqueio de duas
+    ^            ε                   | fases é uma espécie de heurística
+    |     Fase 1 : Fase 2            | que supõe que na maioria dos
+    |      ______:______             | casos não haverá deadlocks. Ele
+    |     /      :      \            | cria uma FILA que pergunta qual
+    |    /       :       \           | das transações precisa do dado
+    |   /        :        \  tempo   | 'x'. Ele ORDENA por meio desta
+    |  /         :         \         | solicitação pedindo na fase 1 e
+    | /          :          \        | liberando os novos para a fase 2.
+    |/           :           \       | Quando termina a fase 2,
+    '------------:---------------->  | reinicia-se o processo.
+                               tempo | 
+
+* Se houver deadlocks, o algoritmo ficará rodando sem parar. Por isso,
+  deve haver uma restrição de tempo ε para o algoritmo funcionar. Se
+  ele passar do tempo, executam-se as ações serialmente.
+
+* Para taxas de conflito de +20% no SGBD, é melhor usar o algoritmo de
+  grafos. Caso contrário, o bloqueio em duas fases funciona bem.
