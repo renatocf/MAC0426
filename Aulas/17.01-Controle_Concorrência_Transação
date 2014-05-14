@@ -1,0 +1,225 @@
+MODELO DO SGBD
+================
+
+                       .---------------------.
+                       | Transações Externas |
+                       '---------------------'
+                          \ \ \ \ | / / / / 
+    .-----------------------------------------------------------.
+    |                             ↕                             |
+    |               .---------------------------.               |
+    |               | Gerenciador de transações |               |
+    |               '---------------------------'               |
+    |                             ↕                             |
+    |                      .-------------.                      |
+    |                      | Escalonador |                      |
+    |                      '-------------'                      |
+    |                             ↕                             |
+    | .-------------------------------------------------------. |
+    | |             .----------------------------.            | |
+    | |             | Gerenciador de Recuperação |            | |
+    | | .-------.   '----------------------------'            | |
+    | | | BD    | <-              ↕                           | |
+    | | |-------|   \ .------------------------.    .-------. | |
+    | | | Index | <-- | Gerenciador de Memória | ↔  | Cache | | |
+    | | |-------|   / '------------------------'    '-------' | |
+    | | | Log   | <-                                          | |
+    | | '-------'                                             | |
+    | |  Memória                                     Memória  | |
+    | | Secundária                                   Primária | |
+    | '-------------------------------------------------------' |
+    '-----------------------------------------------------------'
+
+* Nesta aula, veremos como funciona o algoritmo interno ao ESCALONADOR
+  do SGBD, e como ele junta várias transações numa transação entrelaçada
+  τ, na medida do possível.
+
+CONTROLE DE CONCORRÊNCIA
+==========================
+* O entrelaçamento ajuda a otimizar o acesso a dados, "juntando" as 
+  transações na ordem em que deveriam acontecer e SEM VIOLAR O
+  ISOLAMENTO.
+* Um efeito secundário, mas importante, é a criação de uma transação
+  maior (τ), a qual economiza a criação de um novo ambiente, thread 
+  e execuções.
+
+
+Esquemas de Seriação
+----------------------
+
+    ^                           ^                      
+    |                           |
+    |____________               |______     ________
+    |           |               |     |     |      |
+    |           |               |     |     |      |
+    |     A     |________       |  A  |_____|  A   |____
+    |           |       |       |     |     |      |   |
+    |           |   B   |       |     |  B  |      | B |
+    |___________|_______|__     |_____|_____|______|___|__
+    
+            SERIADO                    INTERCALADO
+
+Esquema da transação
+-------------------
+
+  .-------.     .------------------------. commit .-----------.
+  | ATIVO |---->| PARCIALMENTE EVETIVADA |------->| EFETIVADA |
+  '-------'     '------------------------'        '-----------'
+      |                     |                           |
+      | abort               | abort                     |
+      | (rollback)          ' (rollback)                ' 
+      |                 .-------.                 .-----------.
+      '-----------------| FALHA |                 | ENCERRADA |
+                        '-------'                 '-----------'
+
+Grafo de Seriação
+-------------------
+* E é um escalonamento sobre T1, ..., Tn
+* Criamos o grafo ligando segundo as dependências de ordem de execução.
+* SE o grafo for acíclio, é possível seriar.
+
+Protocolo de Bloqueios Bifásicos
+----------------------------------
+* Em vez de criar o grafo, foi criado o Protocolo de Bloqueios
+  Bifásicos. Ele é uma heurística que bloqueia um processo enquanto
+  outro está usando um dado que ele precisa. 
+* Ele funciona em duas fases:
+    1) Recursos necessários, e resolução de conflitos de requisições;
+    2) Execução.
+* O funcionamento para atender a múltiplos processos é feito realizando
+  as duas fases em blocos.
+* Para resolver os deadlocks, não se analisa pela existência deles (como
+  no caso do grafo). Primeiro, tenta-se executar os blocos. Se eles
+  ficarem muito tempo (mais que um ε), então aborta-se a execução e
+  executa-se SERIALMENTE, pois há grande chance de ter ocorrido um
+  deadlock.
+
+Bloqueios Binários
+--------------------
+
+    LOCK(X) = binário
+    Dois estados: (1) bloqueado; (0) bloqueado.
+    
+* Se o valor do bloqueio em X for 1, o item X não pode ser acessado por
+  uma operação de BD, se for 0 pode ser acessado.
+* Um BLOQUEIO DISTINTO é acessado a cada item X do BD
+* Ex:
+            .------------------.
+            | T1: Transação T1 |          
+            |==================|
+            | LOCK_ITEM(X);    |        .------------------.
+            | A = read(X);     |        | T2: Transação T2 |
+            | A = A - N;       |        |==================|
+            | write(X,A);      |        | LOCK_ITEM(X);    |
+            | UNLOCK_ITEM(X);  |        | C = read(X);     |
+            | LOCK_ITEM(Y)     |        | C = C + M;       |
+            | B = read(Y);     |        | write(X,C);      |
+            | B = B + N;       |        | UNLOCK_ITEM(X);  |
+            | write(Y,B);      |        '------------------'  
+            | UNLOCK_ITEM(Y);  |          
+            '------------------'
+
+ALGORITMO DE CONTROLE DE CONCORRÊNCIA
+---------------------------------------
+* Primeiro, o algoritmo de concorrência tentará reorganizar uma
+  transação, acumulando operações relativas a um dado numa mesma
+  região. Dado o entrelaçamento, não há garantia que uma parte do 
+  código de uma de certa transação seja feita antes da outra: 
+
+Bloqueios Binários (Exclusivos)
+--------------------------------
+* Usa uma FILA para processar o usodos bloqueios. Se uma operação 
+  quiser um dado bloqueado, coloca-a na fila de espera desse dado.
+* Regras para os bloqueios:
+    - Deve garantir lock antes de qualquer read/write;
+    - Deve garantir unlock depois de todo read/write;
+    - Não executarã lock se já o tiver;
+    - Não executará uma operação de unlock se não tiver o lock.
+* DUAS TRANSAÇÕES NÃO PODEM ACESSAR O MESMO ITEM AO MESMO TEMPO.
+
+Bloqueios Binários Compartilhados
+-----------------------------------
+* Bloqueio binário é muito restritivo. Um item X poderia ser acessado
+  por várias transações no caso de leitura.
+* Teremos três operações de bloqueio: real_lock(X), write_lock(X),
+  unlock(X);
+* Ex:
+    
+        .---------------------.
+        | T1: Transação T1    |          
+        |=====================|
+        | WRITE_LOCK_ITEM(X); |        .---------------------.
+        | A = read(X);        |        | T2: Transação T2    |
+        | A = A - N;          |        |=====================|
+        | write(X,A);         |        | WRITE_LOCK_ITEM(X); |
+        | UNLOCK_ITEM(X);     |        | C = read(X);        |
+        | WRITE_LOCK_ITEM(Y); |        | C = C + M;          |
+        | B = read(Y);        |        | write(X,C);         |
+        | B = B + N;          |        | UNLOCK_ITEM(X);     |
+        | write(Y,B);         |        '---------------------'  
+        | UNLOCK_ITEM(Y);     |          
+        '---------------------'
+
+* A regra para bloqueios será um pouco diferente:
+    read_lock(X):
+        if LOCK(X) = "unlocked"
+            then LOCK(X) ← "read-locked"
+            else begin
+                wait(until lock(X)="unlocked" and
+                    thelock manager wakes up the transaction);
+                goto B
+                end;
+
+    write_lock(X):
+        if LOCK(X) = "unlocked"
+            then LOCK(X) ← "write-locked"
+            else begin
+                wait(until lock(X)="unlocked" and
+                    thelock manager wakes up the transaction);
+                goto B
+                end;
+
+    unlock(X):
+        if LOCK(X) = "write-locked"
+            then begin lock(X) ← "unlocked";
+                wakeup one waiting transactions
+            else begin lock(X) ← "unlocked"
+                wakeup one waiting transactions
+
+* Teremos uma tabela de símbolos que, para cada campo, temos uma lista
+  com os dados esperando e concedidos:
+
+     |    |
+     |    |    Lista relacionado ao hash com linear probing
+     |    |    .............
+     |  --:--> J70 ----> G42
+     |    |     |        '- T4 -> T3 } Fila individual para
+     |    |     |           OK       } acesso ao dado
+     |    |     |
+     |    |     '- T1 -> T4 -> T15 } Fila individual para
+     |    |        OK    OK        } acesso ao dado
+     |    |
+     |  --:--> I14
+     |    |    '- T5 -> T4
+     |    |       OK       
+     |    |
+
+* Regras:
+    - Deve garantir read_lock(X) para read;
+    - Deve garantir write_lock(X) para write;
+    - Deve garantir unlock(X) após read/write;
+    - Não usará read_lock(X) se já controlar um lock de read ou write;
+    - Não usará write_lock(X) se já controlar um lock de read ou write;
+    - Não usará unlock(X) ao menos que já possua algum lock (read ou
+      write).
+
+* O protocolo bifásico NÂO GARANTE SERIAÇÃO (quem faz é o grafo)
+* Fases:
+    - expansão ou crescimento: novos bloqueios nos itens podem ser 
+      adquiridos, mas não podem ser liberados. O importante, nesta
+      fase, é ORDENAR O ACESSO. Para bloqueio exclusivo, o do lock.
+      Para o compartilhado, a ordenação ocorre sobre write_lock, pois
+      o read_lock é normal;
+    - recolhimento ou contração: novos bloqueios são liberados, e
+      são dados aos seguintes da fila da ordenação. Novos lock's não
+      podem ser adquiridos.
