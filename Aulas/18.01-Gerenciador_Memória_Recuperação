@@ -1,0 +1,223 @@
+MODELO DO SGBD
+================
+
+                       .---------------------.
+                       | Transações Externas |
+                       '---------------------'
+                          \ \ \ \ | / / / / 
+    .-----------------------------------------------------------.
+    |                             ↕                             |
+    |               .---------------------------.               |
+    |               | Gerenciador de transações |               |
+    |               '---------------------------'               |
+    |                             ↕                             |
+    |                      .-------------.                      |
+    |                      | Escalonador |                      |
+    |                      '-------------'                      |
+    |                             ↕                             |
+    | .-------------------------------------------------------. |
+    | |             .----------------------------.            | |
+    | |             | Gerenciador de Recuperação |            | |
+    | | .-------.   '----------------------------'            | |
+    | | | BD    | <-              ↕                           | |
+    | | |-------|   \ .------------------------.    .-------. | |
+    | | | Index | <-- | Gerenciador de Memória | ↔  | Cache | | |
+    | | |-------|   / '------------------------'    '-------' | |
+    | | | Log   | <-                                          | |
+    | | '-------'                                             | |
+    | |  Memória                                     Memória  | |
+    | | Secundária                                   Primária | |
+    | '-------------------------------------------------------' |
+    '-----------------------------------------------------------'
+
+* O gerenciador de transações recebe todas as transações vindas do meio
+  externo. Ele tem a capacidade de executar, sequencialmente, as
+  transações. Entretanto, ele primeiro as passa para o escalonador.
+* O escalonador tinha por objetivo OTIMIZAR transações, entrelaçando-as
+  (gerando τ) de modo a otimizar concorrentemente o uso de recursos. A
+  transação τ gerada é dada para o gerenciador de transações. Se o
+  protocolo de bloqueio bifásico não funcionar, o gerenciador de
+  recuperação vê que houve deadlock. 
+* O gerenciador de transações repassa a τ gerada para ser executada
+  ou executa as transações sequencialmente.
+
+GERENCIADOR DE MEMÓRIA E RECUPERAÇÃO
+======================================
+
+* Geranciador de Memória:
+    - Duas funções principais:
+        - Busca      (item_de_dado)
+        - Descarrega (Posição)
+    - Políticas de substituição de dados: LIFO, FIFO, etc.
+    - Há duas memórias:
+        - Primária   (cache), com acesso de 10e-9s
+        - Secundário (memória), com acesso de 10e-3s
+    - Todas as ações são feitas sobre o disco
+
+* Gerenciador de Recuperação (GR):
+    - 5 funções principais:
+        - GR-read    (Ti)   # Leitura
+        - GR-write   (Ti,v) # Escrita
+        - GR-commit  (Ti)   # Confirmação
+        - GR-abort   (Ti)   # Interrupção de erro
+        - GR-restart (Ti)   # Ajuda se a transação falhar
+
+* Log
+    - Parte do disco.
+    - O Log serve como uma SEGURANÇA, mantendo um HISTÓRICO das ações
+      feitas com o SGDB. Ele permite recuperação caso haja erros ou 
+      problemas no sistema.
+    - Informações que podem ser armazenados:
+        - Ti: transação
+        - xj: localização na memória secundária 
+              (endereço do dado/registro no disco)
+        - va: valor anterior
+        - vp: valor posterior
+    - Funções de registro de Log
+        - (Ti,init)     # Início de uma ação
+        - (Ti,xj,va,vp) # Para leitura/escrita
+        - (Ti,commit)   # Confirmação
+        - (Ti,abort)    # Interrupção
+    - O Log não precisa marcar a reinicialização: quem o faz é o
+      GERENCIADOR DE RECUPERAÇÃO, ao ler o log.
+    
+    - Ex:
+                .---.----------------------------------.
+                | n | Transação τ     | Arquivo de Log |
+                |===|=================|================|
+                | 0 | T0: init        | (T0,init)      |
+                | 1 | read(A)         | (T0,Aj,30,30)  |
+                | 2 | A := A-20;      |                |
+                | 3 | write(A)        | (To,Aj,30,10)  |
+                | 4 | read(B)         | (T0,Bj,20,20)  |
+                | 5 | B := B+30;      |                |
+                | 6 | write(B)        | (T0,Bj,20,50)  |
+                | 7 | T0: end         | (T0,commit)    |
+                | 8 | (Ti,commit)     |                |
+                | 9 | (Ti,abbort)     |                |
+                '---'-----------------'----------------'
+         
+        As operações como A := A-20 não está armazenada no log, pois 
+        é feita na memória, não no disco. Para ele, virtualmente, esta
+        operação não existe. O disco SÓ LÊ E ESCREVE.
+        
+        O Log mostra as mudanças de ESTADO do dado durante a transação.
+        Se ocorrer algum erro, então essas mudanças de estado NÃO SÃO
+        feitas. Essa é a utilidade do Log.
+        
+        Podemos pensar no Log como uma projeção da transação em outro
+        espaço, com ações parecidas.
+        
+        As ações da transação são executadas NO BANCO. As ações do 
+        Log são escritas DENTRO DO LOG.
+        
+        No nível do Log, todas as operações são gravadas
+        SEQUENCIALMENTE. Pela propriedade da linearidade, elas permitem
+        que as ações sejam recuperadas.
+        
+    - Algoritmos para Gerenciamento de Recuperação
+        - Principais conceitos:
+            - Atualizações imediatas
+            - Atualizações postergadas
+            - Combinações (no)UNDO, (no)REDO
+            - Pontos de confirmação (check point) do registro do Log
+        
+        - Execução postergada: 
+        
+                         τi { T1 init
+                         |  { ...
+            imediata   } |  { A := A - v
+            postergada } |  { ...
+                         |  { T1 commit
+                         |
+                     .---'---------------.
+                     ^                   ^
+                 .-------.            .-----. { (T1,init)
+                 | Cache |            | Log | { ...
+                 '-------'            |     | { ...
+                                      |  .--' { ...
+                   .----.             '--'    { (T1,commit)
+                   '----'                |
+                   | BD | <--------------'
+                   |    |               
+                   '----'               
+        
+          A transação é executada fazendo operações dentro do cache 
+          (a memória primária). A submissão para o BD só será feita 
+          ao CONFIRMAR a transação. Caso ocorra uma FALHA, como queda 
+          de energia. o sistema reinicia. O Geranciador de Recuperação, 
+          no primeiro momento, realia GR-restart. Como não houve commit,
+          escreve-se no Log um ABORTO (via falha) e a operação Ti que 
+          era executada acaba ABORTADA. O Gerenciador de Recuperação 
+          ENVIA UMA MENSAGEM para o Geranciador de Transações, para que 
+          ele RESUBMETA A TRANSAÇÃO ABORTADA. Neste caso, estamos
+          enviando o BD para o último estado consistente, ANTES DA
+          recuperação.
+          
+          Mas e se a última operação tiver sido confirmado? Para o
+          usuário, aparentemente, já houve a mudança de estado. Mas ela
+          não foi feita ainda no BD. Para garantir, então, o Gerenciador
+          de Recuperação reexecuta todas as operações de escrita do Log,
+          de modo o garantir que o BD está no estado consistente.
+          
+          O Log é também uma tabela gigante, do BD. Porém, a leitura e
+          escrita nele são feitas diretamente, sem a indireção do CACHE.
+          Por isso, se ocorrer um erro de escrita no Log, ela será
+          refeita até funcionar.
+          
+          Como decidir o ponto a partir do qual será reexecutado o Log?
+          Usa-se o check_point_recovery. De tanto em tanto tempo, o Log
+          faz esse check point que GARANTE que até aquele ponto o BD
+          está com estado atualizado com relação ao Log. Essa ESCRITA é
+          feita do mesmo modo que para escrever no Log: DIRETAMENTE, do
+          Log para o BD. A cada nova operação feita, o check point
+          avança. Isso também garante que o processo de recuperação não
+          seja perdido com o tempo.
+          
+          Todas as operações feitas pelo check_point_recovery executam 
+          um REDO, recriando as transações não feitas ainda no BD mas 
+          que foram ou não confirmadas no Log.
+          
+          Quando o GR-reinit é executado, o Banco fica indisponível até
+          que todos os BDs estejam consistentes.
+          
+          Na execução postergada, de tempos em tempos, uma função
+          análoga ao check_point_style sincroniza o BD com o Log.
+          Ela marca o ponto do Log até o qual já se garantiu que 
+          houve a execução. Os BDs mais expertos, hoje em dia, a 
+          realizam em momentos de "calmaria" da chegada de transações.
+                   
+        - Execução imediata: 
+           
+                         τi { T1 init
+                         |  { ...
+            imediata   } |  { A := A - v
+            postergada } |  { ...
+                         |  { T1 commit
+                         |
+                     .---'---------------.
+                     ^                   ^
+                 .-------.            .-----. { (T1,init)
+                 | Cache |            | Log | { ...
+                 '-------'            |     | { ...
+                     \/               |  .--' { ...
+                   .----.             '--'    { (T1,commit)
+                   '----'              
+                   | BD |               
+                   |    |               
+                   '----'               
+          
+          No caso da imediata, a cada operação, gravamos TANTO NO LOG 
+          QUANTO NO BD (a partir do cache). Há também um ponteiro
+          check point que, a cada operação feita no BD, avança este
+          check point no Log.
+          
+          No caso de FALHAS, todas as operações confirmadas já estão
+          guardadas no BD. Se todas estiverem assim, o Gerenciador de
+          Recuperação não faz nada.
+
+          Caso haja uma transação ABERTA (sem a confirmação), com
+          algumas operações feitas, realiza-se duas ações:
+          1) Desfazer (UNDO) todas as operações feitas até a última 
+             transação confirmada
+          2) Refazer (REDO) a operação não confirmada
