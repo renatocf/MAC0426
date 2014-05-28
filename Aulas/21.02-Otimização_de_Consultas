@@ -1,0 +1,149 @@
+OTIMIZAÇÃO DE CONSULTAS
+=========================
+
+                  Consulta em linguagem de alto nível
+                                 \/
+                        Análise e validação
+                    
+                    Forma intermediária da Consulta
+                                 \/
+                        Otimizador de consultas
+            
+                          Plano de execução
+                                 \/
+                    Gerador de código de consulta
+    
+                 Código para se executar a consulta 
+                     (compilado ou interpretado)
+                                 \/
+              Processamento em tempo de execução do BD
+             
+                        Resultado da Consulta
+
+1º Passo: Tradução SQL para Álgebra Relacional
+2º Passo: Ordenação externa
+    * Quando um arquivo cabe na memória, ordenamos via os métodos 
+      tradicionais (mergesort, quicksort, heapsort, inserction sort, 
+      etc). Essa ordenação é chamada de INTERNA.
+    * Quando os arquivos não cabem, chamamos a ordenação de EXTERNA.
+    * Passos da ordenação externa:
+        1) Cria-se 'n' arquivos menores que cabem na memória:
+            
+                |   |   |   |   |   |   |   | ...  |   |
+                  1       2       3       4   ...    n
+            
+        2) Ordena-se cada fragmanto via ordenação interna
+            
+                |   |   |   |   |   |   |   | ...  |   |
+                  1'      2'      3'      4'  ...    n'
+             
+        3) Faz-se uma INTERCALAÇÃO dos arquivos. Estas intercalações
+           são limitadas ao tamanho máximo de arquivo que cabe dentro
+           da memória:
+            
+           1º run  .-|   | .-|   | .-|   | .-|   | ...  |   |
+                   |   1'  |   2'  |   3'  |   4'  ...    n'
+                   |       |       |       |     
+                   |       '----.  |       '----.
+           2º run  '---> |   |  |  '---> |   |  |
+                       .-|   | <'      .-|   | <'
+                       |               |
+                       |               |
+                       |       |    |  |
+           3º run      '-----> |    | <'
+                               |    |
+                               |    |
+             
+    * Passo a passo para a ordenação
+        - cláusula ORDER BY
+        - arquivos grandes
+        - FASE 1: Quebra-Ordenação interna (sort)
+        - gera "runs" (fragmentos ordenados do arquivo original)
+        - ordena runs
+        - grava runs
+        - b = número de blocos do arquivo
+        - n_b - espaço disponívelde buffer
+        - n_r = número de runs iniciais
+        - n_r = b/n_b
+        - Complexidade ordem = 2*b (leitura e escrita)
+    
+3º Passo: Tunning e Estatísticas
+    
+    * Para estimar os domínios, mantemos "custos" de acesso à cada
+      tabela. Isso é importante para decidir qual consulta deveria
+      ser feita antes de outra.
+    
+    * Tunning
+        - Índices, produto cartesiano, cache.
+        - Estatísticas de armazenamento: tabelas, índice, log, cache
+        - Estatísticas E/S: atividade leitura-gravação (paginação)
+            
+            |       |
+            |#######|-----------> | reg1 | Poucos registros por página:
+            |       |                      Bom para escrita/substituição
+            |       |}                      
+            |       |}            | reg1 | Muitos registros por paǵina:
+            |       |}----------> |  .   | Bom para leituras extensivas
+            |       |}            |  .   | 
+                                  |  .   | 
+                                  | regn | 
+            
+        - Estatísticas: processamento de consultas/transações
+            
+            Quantas estruturas e transações estamos fazendo.
+        
+        - Estatísticas de índices: níveis de índice x páginas folhas
+            
+            Os registros de cada tabela estão organizados na estrutura
+            de hash/B+ conforme o esquema. Saber se está havendo muitas
+            buscas pelos níveis da árvore B+ ou nas suas folhas (o que 
+            seria igual a olhar uma lista ligada)
+            
+                1.000.000 dados  |    |
+                    ||           | *--:-- B+ ========>   /\
+                    \/ f(n)      |    |                 /  \
+                .---------.      |    |                /    \
+                | \     / |      | *--:-- B+          /      \
+                |  |---|  |      |    |              /        \
+                | /     \ |      |    |             /    B+    \
+                '---------'      | *--:-- B+       /            \
+                                 |    |           /______________\
+                                                  /   /   |   \   \
+                                                 | | | | | | | | | |
+    
+    * Precisamos das estatísticas de ACESSO AOS ÍNDICES e ACESSO AOS
+      DADOS (nessa ordem) para que possamos então CRIAR A ÁRVORE e 
+      TROCAR AS EQUIVALÊNCIAS.
+
+4º Passo: Árvore de Consulta
+    * Árvore com a ORDEM dos operadores
+    * Reposiciona os operadores de seleção/inserção para otimizar o
+      melhor plano de execução:
+    
+    * Otimização de seleção: faz primeiro as seleções de DOMÍNIOS
+      MENORES. Esse conceito é a chave para mudar a ordem das 
+      operações da árvore.
+    
+                p.PNUMERP,P.DNUM,E.SNOME,E.ENDERECO,E.DATANASC
+                                     |
+                              D.GERNSS=E.NSS
+                                /        \
+                       P.DNUM=D.DNUMERO  (E)
+                      /                \
+          P.LOCALIZAÇÃO='Stafford'     (D)
+                      |               
+                     (P)              
+    
+    * Regras gerais (equivalências que podem ser trocadas)
+        - Cascata de seleção
+        - Cascata de projeção
+        - Comutatividade de join
+        - Comutatividade projeção e join
+        - Comutatividade operações de conjunto
+        - Associatividade
+    
+    * De forma geral, as regras de seleção e projeção precisam ser 
+      levadas o mais para baixo possível. Os joins precisam ser 
+      levados o mais para cima o possível. Surgirão, então, várias
+      opções para a árvore: decidiremos qual será feita de acordo
+      com as estatísticas de índice e acesso aos dados
