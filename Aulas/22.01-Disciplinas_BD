@@ -1,0 +1,45 @@
+{ MAC0426 -> Sistemas de Banco de Dados
+{ MAC0439 -> Laboratório de Banco de Dados
+{ MAC0459 -> Ciência em Engenharia de Dados
+
+MAC0459
+- BD orientado a Grafos (não relacioanais);
+    - Livro: www.ime.usp.br/~jef/GraphDatabases.pdf (cap. 1,2,3,anexo)
+    - O modelo de grafos ressurgiu por causa do uso de redes. O modelo 
+      relacional não é bom para identificar vários níveis de
+      relacionamento. Se tivéssemos um autorrelacionamento, por exemplo,
+      poderíamos pegar uma indireção de até 'n' relacionamentos. Para
+      BDs relacionais, fazer joins de uma tabela 'n' vezes é
+      ineficiente. 
+        
+      O modelo de grafos compensa a ineficiência de acesso direto com a 
+      eficiência de acesso de relacionamentos com indireção.
+
+- Recuperação de Informação (profundamente);
+    - Livro: mesmo da página de MAC0426
+
+- Análise exploratória de dados 
+  (PCA, datação, SVM, Recuperação Logística, Abstralções);
+    - Técnicas para ajudar a ENTENDER os dados.
+    - PCA (Principal Component Analysis): Ajuda a entender quais são 
+      as variáveis mais importantes que interferem nos relacionamentos
+      de muitas variáveis.
+
+- Transações longas.
+    - Transações que têm vários passos. Os dados ficam expostos para
+      transações dos passos seguintes enquanto o passo a passo avança.
+      Essas transações quebram as relações ACID:
+             
+          .--------------------------------------------.
+          | .----.      .----.      .----.      .----. |
+          | |    | ===> |    | ===> |    | ===> |    | |
+          | '----'      '----'      '----'      '----' |
+          |   ti         ti+1        ti+2        ti+3  |
+          '--------------------------------------------'
+                Passo a passo completo da transação
+
+* eScience
+    - The Fourth Paradigm: Data-Intensive Scientific Discovery 
+      (Jim Gray)
+    - Transaction Processing: Concepts and Techniques
+      (Jim Gray/Andreas Reuter)

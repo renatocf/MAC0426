@@ -1,0 +1,16 @@
+O que vimos em MAC0426?
+
+* Modelagem de BD (conceitual, lógico, físico), X Mandamentos;
+* Modelo Relacional/Linguagens Relacionais;
+* Normalização;
+
+* Controle de Concorrência/Recuperação de Falhas (Arquitetura);
+* Árvore B+/Noções Recuperação Informação (Arquivo Invertido,
+  Ranqueamento);
+* Noções de Otimização de Consulta.
+
+PROVA: 
+    Consultas em Linguagens Relacionais
+    Controle de Concorrência/Recuperaçãode Falhas
+    Noções de Recuperação de Informação
+    Noções de Otimizaçãode Consulta
